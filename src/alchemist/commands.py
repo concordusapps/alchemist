@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 import contextlib
-# import pkgutil
-# from dateutil.parser import parse as parse_datetime
-# import json
+import datetime
+import uuid
+import operator
+import pkgutil
+import os
+import logging
+from functools import reduce
+from dateutil.parser import parse as parse_datetime
+import json
 import colorama
 from importlib import import_module
 from flask.ext import script
@@ -110,141 +116,177 @@ def Server(configuration):
     return script.Server(host=host, port=port, debug=configuration['DEBUG'])
 
 
-# def _table_from_package(package, name):
-#     models = import_module('{}.models'.format(package))
-#     return models.Base._decl_class_registry[name].__table__
+class Fixture:
 
+    class Load(script.Command):
 
-# def _default(obj):
-#     if isinstance(obj, datetime.time) or isinstance(obj, datetime.date):
-#         return obj.isoformat()
+        option_list = (
+            script.Option(dest='name'),
+        )
 
-#     if isinstance(obj, uuid.UUID):
-#         return obj.hex
+        def __init__(self, config):
+            super().__init__()
 
-#     if isinstance(obj, bytes):
-#         return obj.decode('utf8')
+            # Store the configuration for later use.
+            self.config = config
 
-#     # Just give up and stringify it.
-#     return str(obj)
+        def run(self, name):
+            # Establish a database session.
+            session = self.config['DATABASE_SESSION']()
 
+            try:
+                # Attempt to open the name directly as a file.
+                with open(name) as stream:
+                    self._load_one(session, stream.read())
 
-# def _dump_one(targets, table):
-#     # Establish a database session.
-#     session = db.Session()
+                # Commit the transaction.
+                session.commit()
 
-#     # Select all data.
-#     result = session.connection().execute(table.select())
+                # We're done here.
+                return
 
-#     # Build result list.
-#     for row in result.fetchall():
-#         target = {'table': table.name, 'columns': {}}
-#         for index, name in enumerate(table.columns.keys()):
-#             target['columns'][name] = row[index]
+            except FileNotFoundError:
+                # Not a file.
+                pass
 
-#         targets.append(target)
+            # Iterate through all packages.
+            name = os.path.join('fixtures', name) + '.json'
+            for package in self.config['PACKAGES']:
+                try:
+                    # Attmept to pull the fixture from here.
+                    text = pkgutil.get_data(package, name).decode('utf8')
 
+                except FileNotFoundError:
+                    # No file found; move along.
+                    continue
 
-# @manager.option(dest='names', default=None, nargs='*')
-# def dumpdata(names):
-#     # Disable INFO.
-#     logging.disable(logging.INFO)
+                # Load this fixture.
+                self._load_one(session, text)
 
-#     # Did we get any names?
-#     if not names:
-#         # Dump everything.
-#         names = settings.PACKAGES
+            # Commit the transaction.
+            session.commit()
 
-#     # Enumerate through tables.
-#     targets = []
-#     for name in names:
-#         # Is this the name of a package ?
-#         if name in settings.PACKAGES:
-#             # Dump all tables.
-#             models = import_module('{}.models'.format(name))
-#             for table in models.Base.metadata.sorted_tables:
-#                 _dump_one(targets, table)
+        def _get_table(self, name):
+            for package in self.config['PACKAGES']:
+                models = import_module('{}.models'.format(package))
+                if name in models.Base.metadata.tables:
+                    return models.Base.metadata.tables[name]
 
-#         else:
-#             # Attempt to get table.
-#             table = _table_from_package(*name.split('.'))
-#             _dump_one(targets, table)
+        def _load_one(self, session, text):
+            # Decode the JSON.
+            data = json.loads(text)
 
-#     # Dump the JSON
-#     print(json.dumps(targets, default=_default))
+            # Iterate through the defined instances.
+            for target in data:
+                # Target should define a table name and a collection
+                # of columns.
+                table = self._get_table(target['table'])
 
+                # Build the primary key clause.
+                c = target['columns']
+                values = map(lambda x: x == c[x.name], table.primary_key)
+                clause = reduce(operator.and_, values)
 
-# def _table_from_name(name):
-#     for package in settings.PACKAGES:
-#         models = import_module('{}.models'.format(package))
-#         if name in models.Base.metadata.tables:
-#             return models.Base.metadata.tables[name]
+                # Attempt to find an existing row.
+                exists = session.connection().execute(
+                    table.select().where(clause).limit(1)).first()
 
+                # Prepare values; coerce into python types.
+                for key, value in target['columns'].items():
+                    kind = table.columns[key].type.python_type
 
-# @manager.command
-# def loaddata(name):
-#     # Establish a database session.
-#     session = db.Session()
+                    if (issubclass(kind, datetime.date)
+                            or issubclass(kind, datetime.time)):
+                        # Coerce date/time to python
+                        target['columns'][key] = parse_datetime(value)
 
-#     # Walk all packages and find every `fixtures` directory.
-#     name = os.path.join('fixtures', name + '.json')
-#     for package in settings.PACKAGES:
-#         try:
-#             # Attempt to load the text.
-#             text = pkgutil.get_data(package, name)
+                    elif issubclass(kind, bytes):
+                        # Encode string as bytes.
+                        target['columns'][key] = value.encode('utf8')
 
-#         except FileNotFoundError:
-#             # No file found; move along.
-#             continue
+                if exists:
+                    # Update the existing row.
+                    statement = table.update().values(
+                        **target['columns']).where(clause)
 
-#         try:
-#             # Attempt to decode the JSON file.
-#             data = json.loads(text.decode('utf8'))
+                else:
+                    # Add a new row.
+                    statement = table.insert().values(**target['columns'])
 
-#         except ValueError:
-#             # Error decoding the JSON file.
-#             continue
+                # Execute the statement.
+                session.connection().execute(statement)
 
-#         # Iterate through the defined instances.
-#         for target in data:
-#             # Target should define a table name and a collection
-#             # of columns.
-#             table = _table_from_name(target['table'])
+    class Dump(script.Command):
 
-#             # Attempt to find an existing row.
-#             pk_clause = None
-#             for key in table.primary_key.columns.keys():
-#                 value = target['columns'].get(key)
-#                 clause = table.columns[key] == value
-#                 pk_clause = (pk_clause & clause) if pk_clause else clause
+        option_list = (
+            script.Option(dest='names', default=None, nargs='*'),
+        )
 
-#             exists = session.connection().execute(
-#                 table.select().where(pk_clause)).fetchall()
+        def __init__(self, config):
+            super().__init__()
 
-#             # Prepare values; coerce into python types.
-#             values = target['columns']
-#             for key, value in values.items():
-#                 column = table.columns[key]
-#                 kind = column.type.python_type
+            # Store the configuration for later use.
+            self.config = config
 
-#                 if (issubclass(kind, datetime.date) or
-#                         issubclass(kind, datetime.time)):
-#                     # Coerce date/time to python
-#                     values[key] = parse_datetime(value)
+        def run(self, names):
+            # Disable INFO (sqlalchemy log level).
+            logging.disable(logging.INFO)
 
-#                 if issubclass(kind, bytes):
-#                     # Encode string as bytes.
-#                     values[key] = value.encode('utf8')
+            # Dump all the things if we didn't get any names.
+            packages = self.config.get('PACKAGES', [])
+            if not names:
+                names = packages
 
-#             if exists:
-#                 # Update the existing row.
-#                 session.connection().execute(table.update().values(
-#                     **target['columns']).where(pk_clause))
+            # Enumerate through the packages and tables.
+            targets = []
+            for name in names:
+                if name in packages:
+                    # Dump all tables in package.
+                    models = import_module('{}.models'.format(name))
+                    for table in models.Base.metadata.sorted_tables:
+                        self._dump_one(targets, table)
 
-#             else:
-#                 # Add a new row.
-#                 session.connection().execute(table.insert().values(
-#                     **target['columns']))
+                else:
+                    # Dump this specific table.
+                    segments = name.split('.')
+                    table = segments[-1]
+                    package = '.'.join(segments[:-1])
+                    self._dump_one(targets, self._get_table(package, table))
 
-#     # Commit the transaction.
-#     session.commit()
+            # Dump the JSON
+            print(json.dumps(targets, default=self._default))
+
+        @staticmethod
+        def _get_table(package, name):
+            models = import_module('{}.models'.format(package))
+            return models.Base._decl_class_registry[name].__table__
+
+        def _dump_one(self, targets, table):
+            # Establish a database session.
+            session = self.config['DATABASE_SESSION']()
+
+            # Select all data.
+            result = session.connection().execute(table.select())
+
+            # Build result list.
+            for row in result.fetchall():
+                target = {'table': table.name, 'columns': {}}
+                for index, name in enumerate(table.columns.keys()):
+                    target['columns'][name] = row[index]
+
+                targets.append(target)
+
+        @staticmethod
+        def _default(obj):
+            if (isinstance(obj, datetime.time)
+                    or isinstance(obj, datetime.date)):
+                return obj.isoformat()
+
+            if isinstance(obj, uuid.UUID):
+                return obj.hex
+
+            if isinstance(obj, bytes):
+                return obj.decode('utf8')
+
+            # Just give up and stringify it.
+            return str(obj)
