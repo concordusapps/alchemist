@@ -33,13 +33,14 @@ def Application(package):
             testing = True
             break
 
-    # Change configuration if we're testing.
-    context.config['DATABASE_URI'] = 'sqlite:///:memory:'
-    context.config['DATABASE_ENGINE'] = sa.create_engine(
-        context.config['DATABASE_URI'], echo=False)
+    if testing:
+        # Change configuration if we're testing.
+        context.config['DATABASE_URI'] = 'sqlite:///:memory:'
+        context.config['DATABASE_ENGINE'] = sa.create_engine(
+            context.config['DATABASE_URI'], echo=False)
 
-    context.config['DATABASE_SESSION'].configure(
-        bind=context.config['DATABASE_ENGINE'])
+        context.config['DATABASE_SESSION'].configure(
+            bind=context.config['DATABASE_ENGINE'])
 
     # Apply site configuration.
     _apply_site_configuration(context)
