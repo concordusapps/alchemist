@@ -8,6 +8,10 @@ from importlib import import_module
 
 
 def _apply_site_configuration(application):
+    # Configure the application.
+    # Pull configuration from the project settings module.
+    context.config.from_object('{}.settings'.format(application.name))
+
     # Pull configuration from the project-specific settings module.
     module = '{}_SETTINGS_MODULE'.format(application.name).replace('.', '_')
     if module in os.environ:
@@ -22,9 +26,8 @@ def Application(package):
     # Instantiate the flask application context.
     context = flask.Flask(package)
 
-    # Configure the application.
-    # Pull configuration from the project settings module.
-    context.config.from_object('{}.settings'.format(package))
+    # Apply site configuration.
+    _apply_site_configuration(context)
 
     # Detect if were testing.
     testing = False
@@ -41,9 +44,6 @@ def Application(package):
 
         context.config['DATABASE_SESSION'].configure(
             bind=context.config['DATABASE_ENGINE'])
-
-    # Apply site configuration.
-    _apply_site_configuration(context)
 
     # Return the flask context.
     return context
