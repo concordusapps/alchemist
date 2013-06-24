@@ -113,7 +113,8 @@ def Server(configuration):
     # Create a runserver command that uses settings for its host and port.
     host = configuration['SERVER_HOST']
     port = configuration['SERVER_PORT']
-    return script.Server(host=host, port=port, debug=configuration['DEBUG'])
+    return script.Server(host=host, port=port, debug=configuration['DEBUG'],
+                         threaded=True)
 
 
 class Fixture:
