@@ -169,7 +169,14 @@ class Fixture:
 
         def _get_table(self, name):
             for package in self.config['PACKAGES']:
-                models = import_module('{}.models'.format(package))
+                try:
+                    # Attempt to get models.
+                    models = import_module('{}.models'.format(package))
+
+                except ImportError:
+                    # Package doesn't have models.
+                    continue
+
                 if name in models.Base.metadata.tables:
                     return models.Base.metadata.tables[name]
 
@@ -242,8 +249,14 @@ class Fixture:
             targets = []
             for name in names:
                 if name in packages:
-                    # Dump all tables in package.
-                    models = import_module('{}.models'.format(name))
+                    try:
+                        # Dump all tables in package.
+                        models = import_module('{}.models'.format(name))
+
+                    except ImportError:
+                        # No models here
+                        continue
+
                     for table in models.Base.metadata.sorted_tables:
                         self._dump_one(targets, table)
 
