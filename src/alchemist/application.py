@@ -10,7 +10,7 @@ from importlib import import_module
 def _apply_site_configuration(application):
     # Configure the application.
     # Pull configuration from the project settings module.
-    context.config.from_object('{}.settings'.format(application.name))
+    application.config.from_object('{}.settings'.format(application.name))
 
     # Pull configuration from the project-specific settings module.
     module = '{}_SETTINGS_MODULE'.format(application.name).replace('.', '_')
