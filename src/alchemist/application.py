@@ -31,11 +31,12 @@ def Application(package):
 
     if context.config['DATABASE_URI'].startswith('sqlite:'):
         # If we're running with SQLITE we'd like datbase foreign key support.
-        def _pragma_on_connect(connection, record):
+        def _on_connect(connection, record):
             connection.execute('.load /usr/lib/sqlite3/pcre.so')
             connection.execute('PRAGMA foreign_keys=ON')
 
-        sa.event.listen(engine, 'connect', _pragma_on_connect)
+        sa.event.listen(context.config['DATABASE_ENGINE'], 'connect',
+                        _on_connect)
 
     # Detect if were testing.
     testing = False
