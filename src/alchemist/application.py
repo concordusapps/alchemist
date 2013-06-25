@@ -2,6 +2,7 @@
 import flask
 import os
 import sys
+import re
 import sqlalchemy as sa
 from sqlalchemy import orm
 from importlib import import_module
@@ -30,9 +31,13 @@ def Application(package):
     _apply_site_configuration(context)
 
     if context.config['DATABASE_URI'].startswith('sqlite:'):
-        # If we're running with SQLITE we'd like datbase foreign key support.
+        # If we're running with SQLITE we'd like datbase foreign key support
+        # and REGEXP support.
+        def _sqlite3_regexp(pattern, text):
+            return bool(re.search(pattern, text))
+
         def _on_connect(connection, record):
-            connection.execute('.load /usr/lib/sqlite3/pcre.so')
+            connection.create_function('regexp', 2, _sqlite3_regexp)
             connection.execute('PRAGMA foreign_keys=ON')
 
         sa.event.listen(context.config['DATABASE_ENGINE'], 'connect',
