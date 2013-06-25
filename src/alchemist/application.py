@@ -29,6 +29,14 @@ def Application(package):
     # Apply site configuration.
     _apply_site_configuration(context)
 
+    if context.config['DATABASE_URI'].startswith('sqlite:'):
+        # If we're running with SQLITE we'd like datbase foreign key support.
+        def _pragma_on_connect(connection, record):
+            connection.execute('.load /usr/lib/sqlite3/pcre.so')
+            connection.execute('PRAGMA foreign_keys=ON')
+
+        sa.event.listen(engine, 'connect', _pragma_on_connect)
+
     # Detect if were testing.
     testing = False
     for arg in sys.argv:
