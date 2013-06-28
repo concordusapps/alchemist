@@ -22,6 +22,22 @@ def _apply_site_configuration(application):
     if 'SETTINGS_MODULE' in os.environ:
         application.config.from_envvar('SETTINGS_MODULE')
 
+    # Detect if were testing.
+    testing = False
+    for arg in sys.argv:
+        if 'test' in arg:
+            testing = True
+            break
+
+    if testing:
+        # Change configuration if we're testing.
+        context.config['DATABASE_URI'] = 'sqlite:///:memory:'
+        context.config['DATABASE_ENGINE'] = sa.create_engine(
+            context.config['DATABASE_URI'], echo=False)
+
+        context.config['DATABASE_SESSION'].configure(
+            bind=context.config['DATABASE_ENGINE'])
+
 
 def Application(package):
     # Instantiate the flask application context.
@@ -42,23 +58,7 @@ def Application(package):
 
         sa.event.listen(context.config['DATABASE_ENGINE'], 'connect',
                         _on_connect)
-
-    # Detect if were testing.
-    testing = False
-    for arg in sys.argv:
-        if 'test' in arg:
-            testing = True
-            break
-
-    if testing:
-        # Change configuration if we're testing.
-        context.config['DATABASE_URI'] = 'sqlite:///:memory:'
-        context.config['DATABASE_ENGINE'] = sa.create_engine(
-            context.config['DATABASE_URI'], echo=False)
-
-        context.config['DATABASE_SESSION'].configure(
-            bind=context.config['DATABASE_ENGINE'])
-
+    
     # Return the flask context.
     return context
 
