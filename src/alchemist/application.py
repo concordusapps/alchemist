@@ -38,15 +38,7 @@ def _apply_site_configuration(application):
         application.config['DATABASE_SESSION'].configure(
             bind=application.config['DATABASE_ENGINE'])
 
-
-def Application(package):
-    # Instantiate the flask application context.
-    context = flask.Flask(package)
-
-    # Apply site configuration.
-    _apply_site_configuration(context)
-
-    if context.config['DATABASE_URI'].startswith('sqlite:'):
+    if application.config['DATABASE_URI'].startswith('sqlite:'):
         # If we're running with SQLITE we'd like datbase foreign key support
         # and REGEXP support.
         def _sqlite3_regexp(pattern, text):
@@ -56,8 +48,16 @@ def Application(package):
             connection.create_function('regexp', 2, _sqlite3_regexp)
             connection.execute('PRAGMA foreign_keys=ON')
 
-        sa.event.listen(context.config['DATABASE_ENGINE'], 'connect',
+        sa.event.listen(application.config['DATABASE_ENGINE'], 'connect',
                         _on_connect)
+
+
+def Application(package):
+    # Instantiate the flask application context.
+    context = flask.Flask(package)
+
+    # Apply site configuration.
+    _apply_site_configuration(context)
     
     # Return the flask context.
     return context
