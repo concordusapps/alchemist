@@ -5,6 +5,7 @@ import uuid
 import operator
 import pkgutil
 import os
+import collections
 import logging
 from functools import reduce
 from dateutil.parser import parse as parse_datetime
@@ -17,7 +18,7 @@ from flask.ext import script
 def _db_collect(configuration):
     """Collect all DB metadata from the configuration."""
     # Enumerate through all 'installed' packages.
-    bases = {}
+    bases = collections.OrderedDict()
     for name in configuration['PACKAGES']:
         try:
             # Attempt to import the model file.
