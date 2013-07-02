@@ -3,6 +3,7 @@
 import types
 import sys
 from .models import Model
+from .manager import Manager
 import threading
 from sqlalchemy import orm
 from alchemist.conf import settings
