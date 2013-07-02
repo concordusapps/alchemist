@@ -18,7 +18,7 @@ setup(
     author='Concordus Applications',
     author_email='support@concordusapps.com',
     scripts=['bin/alchemist'],
-    package_dir={'alchemist': 'bisrc/alchemist'},
+    package_dir={'alchemist': 'src/alchemist'},
     packages=find_packages('src'),
     dependency_links=(
         # flask-script: pypi release does not yet support python 3.x
@@ -26,7 +26,7 @@ setup(
         '#egg=flask-script-1.0.0',
 
         # sqlalchemy-utils: pypi does not have latest python 3.x support
-        'git+git://github.com/kvesteri/sqlalchemy-utils/pull/6'
+        'git+git://github.com/kvesteri/sqlalchemy-utils.git'
         '#egg=sqlalchemy-utils-dev'
     ),
     install_requires=(
