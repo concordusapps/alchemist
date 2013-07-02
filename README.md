@@ -23,7 +23,7 @@ unspecified, displays the version of all components.
 
 Contains various commands to control and manage the database.
 
-###### --sql
+##### --sql
 
 Use `--sql` on any database operation to not actually perform the
 operation but print all SQL that would be executed to `stdout`.
