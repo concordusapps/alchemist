@@ -26,7 +26,7 @@ def redirect():
 class Manager(script.Manager):
 
     @classmethod
-    def _find_application(cls):
+    def find_application(cls):
         # Check in every file in the current directory and every file
         # in every directory in the current directory and the next.
         # If there is no application found, iterate backwards and
@@ -83,13 +83,13 @@ class Manager(script.Manager):
 
         # Nope; recurse backwards.
         os.chdir('..')
-        return cls._find_application()
+        return cls.find_application()
 
     def __init__(self, application=None, *args, **kwargs):
         # If no application is provided; we need to attempt to discover one.
         if application is None:
             with redirect():
-                application = self._find_application()
+                application = self.find_application()
 
         # If no application is provided; initialize a default one atleast so
         # flask-script doesn't break.
