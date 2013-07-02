@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 # from .session import Session, session
-from .models import Model
-from .manager import Manager
-
 import types
 import sys
+from .models import Model
+from .manager import Manager
+import threading
 from sqlalchemy import orm
+from alchemist.conf import settings
 
 
 class Session(orm.Session):
 
     def __init__(self, *args, **kwargs):
-        from alchemist.conf import settings
-        from alchemist.db.manager import Manager
-
         # TODO: Support multiple database routing.
         # Bind to the default database.
         kwargs.setdefault('bind', settings['DATABASES']['default'])
@@ -25,34 +23,27 @@ class Session(orm.Session):
         super().__init__(*args, **kwargs)
 
 
+# Wrap the module.
+class Inner(types.ModuleType):
 
-def Package(name):
+    #! Locally available session object.
+    _local = threading.local()
 
-    # Wrap the module
-    class Inner(types.ModuleType):
+    @property
+    def session(self):
+        # Check for an existing session.
+        if not hasattr(self._local, 'instance'):
+            # No session available; create one.
+            self._local.instance = self.orm.Session(
+                bind=self.settings['DATABASES']['default'],
+                query_cls=self.Manager)
 
-        __name__ = name
+        # Return the available session.
+        return self._local.instance
 
-        _session = None
+# Update the inner module with the actual contents.
+instance = Inner(__name__)
+instance.__dict__.update(sys.modules[__name__].__dict__)
 
-        Session = Session
-
-        Manager = Manager
-
-        Model = Model
-
-        @property
-        def session(self):
-            from sqlalchemy import orm
-            from alchemist.conf import settings
-
-            if self._session is None:
-                self._session = self.Session(query_cls=self.Manager)
-
-            return self._session
-
-    # Return the module.
-    return Inner(name)
-
-
-sys.modules['alchemist.db'] = Package('alchemist.db')
+# Store the module wrapper
+sys.modules[__name__] = instance

@@ -4,6 +4,8 @@ import weakref
 import re
 from datetime import datetime
 import sqlalchemy as sa
+from sqlalchemy.orm import object_session
+from sqlalchemy.orm.util import has_identity
 from sqlalchemy.ext.declarative import declared_attr, DeclarativeMeta, base
 from alchemist.conf import settings
 
@@ -110,6 +112,22 @@ class Model(metaclass=ModelBase):
         name = re.sub(r'([A-Z])', r'_\1', name)
         name = re.sub(r'\.+', r'_', name)
         return name
+
+    def save(self):
+        """Commit helper; akin to django's model.save()"""
+        if has_identity(self):
+            # Object has already been persisted to the database.
+            # Commit any changes that may have happened.
+            session = object_session(self)
+            session.commit()
+
+        else:
+            from alchemist import db
+
+            # Object has not been persisted to the database.
+            # Add it to the scoped session and commit it.
+            db.session.add(self)
+            db.session.commit()
 
 
 class Timestamp:
