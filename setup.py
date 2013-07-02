@@ -26,7 +26,7 @@ setup(
         '#egg=flask-script-1.0.0-dev',
 
         # sqlalchemy-utils: pypi does not have latest python 3.x support
-        'git+git://github.com/kvesteri/sqlalchemy-utils.git'
+        'git+git://github.com/concordusapps/sqlalchemy-utils.git@additional'
         '#egg=sqlalchemy-utils-0.13.3'
     ),
     install_requires=(
