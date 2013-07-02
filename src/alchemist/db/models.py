@@ -102,10 +102,6 @@ class Model(metaclass=ModelBase):
     __abstract__ = True
 
     @declared_attr
-    def __manager__(cls):
-        return __import__('alchemist.db').db.Manager
-
-    @declared_attr
     def __tablename__(cls):
         package = ModelBase._get_package(cls.__module__).lower()
         name = '{}.{}'.format(package, cls.__name__.lower())
