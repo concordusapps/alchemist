@@ -93,7 +93,7 @@ def _render_statement(statement, bind=None):
     return LiteralCompiler(bind.dialect, statement).process(statement)
 
 
-def init(names=None, sql=False, log=True):
+def init(names=None, sql=False, echo=True):
     """Initialize the database; create all specified tables."""
     # TODO: Support multi-db routing.
     engine = settings['DATABASES']['default']
@@ -108,7 +108,7 @@ def init(names=None, sql=False, log=True):
 
     # Iterate through each collected package metadata.
     for name, metadata in metadata.items():
-        if log:
+        if echo:
             # Log the sequence.
             print(colored('alchemist db', 'grey'),
                   colored('init', 'cyan'),
@@ -118,7 +118,7 @@ def init(names=None, sql=False, log=True):
         # Iterate through all tables.
         for table in metadata.sorted_tables:
             if not table.exists(engine):
-                if log:
+                if echo:
                     # Log the sequence.
                     print(colored('alchemist db', 'grey'),
                           colored('create', 'cyan'),
@@ -135,7 +135,7 @@ def init(names=None, sql=False, log=True):
                     table.create(engine)
 
 
-def clear(names=None, sql=False, log=True):
+def clear(names=None, sql=False, echo=True):
     """Clear the database; drop all specified tables."""
     # TODO: Support multi-db routing.
     engine = settings['DATABASES']['default']
@@ -150,7 +150,7 @@ def clear(names=None, sql=False, log=True):
 
     # Iterate through each collected package metadata.
     for name, metadata in metadata.items():
-        if log:
+        if echo:
             # Log the sequence.
             print(colored('alchemist db', 'grey'),
                   colored('clear', 'cyan'),
@@ -160,7 +160,7 @@ def clear(names=None, sql=False, log=True):
         # Iterate through all tables.
         for table in reversed(metadata.sorted_tables):
             if table.exists(engine):
-                if log:
+                if echo:
                     # Log the sequence.
                     print(colored('alchemist db', 'grey'),
                           colored('drop', 'cyan'),
@@ -177,7 +177,7 @@ def clear(names=None, sql=False, log=True):
                     table.drop(engine)
 
 
-def flush(names=None, sql=False, log=False):
+def flush(names=None, sql=False, echo=True):
     """Flush the database; delete data from specified tables."""
     # TODO: Support multi-db routing.
     engine = settings['DATABASES']['default']
@@ -192,7 +192,7 @@ def flush(names=None, sql=False, log=False):
 
     # Iterate through each collected package metadata.
     for name, metadata in reversed(list(metadata.items())):
-        if log:
+        if echo:
             # Log the sequence.
             print(colored('alchemist db', 'grey'),
                   colored('flush', 'cyan'),
@@ -205,7 +205,7 @@ def flush(names=None, sql=False, log=False):
                 # Create the DELETE statement.
                 statement = table.delete()
 
-                if log:
+                if echo:
                     # Log the sequence.
                     print(colored('alchemist db', 'grey'),
                           colored('shell', 'cyan'),
