@@ -80,7 +80,7 @@ class Manager(script.Manager):
                     directory = os.path.join(directory, '..')
 
                 # Add the directory to the module path.
-                sys.path.append(directory)
+                sys.path.append(os.path.abspath(directory))
 
                 # Return the application.
                 return app
