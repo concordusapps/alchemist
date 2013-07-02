@@ -27,9 +27,23 @@ class Inner(types.ModuleType):
 
     @property
     def Session(self):
-        return self.orm.sessionmaker(
-            bind=self.settings['DATABASES']['default'],
-            query_cls=self.Manager)
+        # Save these for reference.
+        bind = self.settings['DATABASES']['default']
+        Manager = self.Manager
+
+        # Construct an inner class to late-bind configuration.
+        class Session(self.orm.Session):
+
+            def __init__(self, *args, **kwargs):
+                # Default the bind and query class.
+                kwargs.setdefault('bind', bind)
+                kwargs.setdefault('query_cls', Manager)
+
+                # Continue the initialization.
+                super().__init__(*args, **kwargs)
+
+        # Return the inner class.
+        return Session
 
 # Update the inner module with the actual contents.
 instance = Inner(__name__)
