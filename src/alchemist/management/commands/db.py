@@ -90,20 +90,18 @@ def _render_statement(statement, bind=None):
     return LiteralCompiler(bind.dialect, statement).process(statement)
 
 
-def init(name=None, sql=False):
+def init(names=None, sql=False):
     """Initialize the database; create all specified tables."""
     # TODO: Support multi-db routing.
     engine = settings['DATABASES']['default']
 
     # Iterate through all registered packages if one is not specified.
     metadata = _collect_metadata()
-    if name is not None:
-        # Is the name a registered package?
-        if name not in metadata:
-            raise ValueError("'{}' is not a registered package".format(name))
-
-        # Limit the metadata to just the specified one.
-        metadata = {name: metadata[name]}
+    if names:
+        # Are the names registered?
+        metadata = {k: v for k, v in metadata.items() if k in names}
+        if not metadata:
+            raise ValueError("One of the listed packages is not registered.")
 
     # Iterate through each collected package metadata.
     for name, base in metadata.items():
@@ -132,20 +130,18 @@ def init(name=None, sql=False):
                     table.create(engine)
 
 
-def clear(name=None, sql=False):
+def clear(names=None, sql=False):
     """Clear the database; drop all specified tables."""
     # TODO: Support multi-db routing.
     engine = settings['DATABASES']['default']
 
     # Iterate through all registered packages if one is not specified.
     metadata = _collect_metadata()
-    if name is not None:
-        # Is the name a registered package?
-        if name not in metadata:
-            raise ValueError("'{}' is not a registered package".format(name))
-
-        # Limit the metadata to just the specified one.
-        metadata = {name: metadata[name]}
+    if names:
+        # Are the names registered?
+        metadata = {k: v for k, v in metadata.items() if k in names}
+        if not metadata:
+            raise ValueError("One of the listed packages is not registered.")
 
     # Iterate through each collected package metadata.
     for name, base in metadata.items():
@@ -174,20 +170,18 @@ def clear(name=None, sql=False):
                     table.drop(engine)
 
 
-def flush(name=None, sql=False):
+def flush(names=None, sql=False):
     """Flush the database; delete data from specified tables."""
     # TODO: Support multi-db routing.
     engine = settings['DATABASES']['default']
 
     # Iterate through all registered packages if one is not specified.
     metadata = _collect_metadata()
-    if name is not None:
-        # Is the name a registered package?
-        if name not in metadata:
-            raise ValueError("'{}' is not a registered package".format(name))
-
-        # Limit the metadata to just the specified one.
-        metadata = {name: metadata[name]}
+    if names:
+        # Are the names registered?
+        metadata = {k: v for k, v in metadata.items() if k in names}
+        if not metadata:
+            raise ValueError("One of the listed packages is not registered.")
 
     # Iterate through each collected package metadata.
     for name, base in reversed(list(metadata.items())):
@@ -236,7 +230,7 @@ class Database(script.Manager):
         for command in [init, clear, flush]:
             # Add the name option to limit operation scope.
             command = self.option(
-                dest='name', nargs='?',
+                dest='names', nargs='*',
                 help='The package to perform the operation on; '
                      'defaults to all.')(command)
 
