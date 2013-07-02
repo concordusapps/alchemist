@@ -27,7 +27,7 @@ setup(
 
         # sqlalchemy-utils: pypi does not have latest python 3.x support
         'git+git://github.com/concordusapps/sqlalchemy-utils.git@additional'
-        '#egg=sqlalchemy-utils-0.13.3'
+        '#egg=sqlalchemy-utils-dev'
     ),
     install_requires=(
         # Cross-platform colored terminal text.
@@ -59,6 +59,6 @@ setup(
 
         # SQLAlchemy utilities.
         # <https://github.com/kvesteri/sqlalchemy-utils>.
-        'sqlalchemy-utils == 0.13.3'
+        'sqlalchemy-utils == dev'
     ),
 )
