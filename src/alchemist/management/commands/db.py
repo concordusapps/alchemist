@@ -3,6 +3,7 @@ import collections
 import sys
 import contextlib
 from importlib import import_module
+import sqlalchemy as sa
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy import schema
 from sqlalchemy.orm.query import Query
@@ -34,9 +35,10 @@ def _collect_metadata():
         # a class named, 'Base', that is of the right type.
         for module in package, models:
             base = getattr(module, 'Base', None)
-            if base and isinstance(base, DeclarativeMeta):
+            meta = getattr(base, 'metadata', None)
+            if meta and isinstance(meta, sa.MetaData):
                 # Found a match; move along.
-                metadata[name] = base
+                metadata[name] = meta
                 continue
 
         # Try searching through the namespaces of both the package
@@ -44,9 +46,10 @@ def _collect_metadata():
         for module in package, models:
             if module:
                 for cls in module.__dict__.values():
-                    if isinstance(base, DeclarativeMeta):
+                    meta = getattr(cls, 'metadata', None)
+                    if meta and isinstance(meta, sa.MetaData):
                         # Found a match; move along.
-                        metadata[name] = base
+                        metadata[name] = meta
                         continue
 
     # Return the collection of metadata.
@@ -104,7 +107,7 @@ def init(names=None, sql=False, log=True):
             raise ValueError("One of the listed packages is not registered.")
 
     # Iterate through each collected package metadata.
-    for name, base in metadata.items():
+    for name, metadata in metadata.items():
         if log:
             # Log the sequence.
             print(colored('alchemist db', 'grey'),
@@ -113,7 +116,7 @@ def init(names=None, sql=False, log=True):
                   file=sys.stderr)
 
         # Iterate through all tables.
-        for table in base.metadata.sorted_tables:
+        for table in metadata.sorted_tables:
             if not table.exists(engine):
                 if log:
                     # Log the sequence.
@@ -146,7 +149,7 @@ def clear(names=None, sql=False, log=True):
             raise ValueError("One of the listed packages is not registered.")
 
     # Iterate through each collected package metadata.
-    for name, base in metadata.items():
+    for name, metadata in metadata.items():
         if log:
             # Log the sequence.
             print(colored('alchemist db', 'grey'),
@@ -155,7 +158,7 @@ def clear(names=None, sql=False, log=True):
                   file=sys.stderr)
 
         # Iterate through all tables.
-        for table in reversed(base.metadata.sorted_tables):
+        for table in reversed(metadata.sorted_tables):
             if table.exists(engine):
                 if log:
                     # Log the sequence.
@@ -188,7 +191,7 @@ def flush(names=None, sql=False, log=False):
             raise ValueError("One of the listed packages is not registered.")
 
     # Iterate through each collected package metadata.
-    for name, base in reversed(list(metadata.items())):
+    for name, metadata in reversed(list(metadata.items())):
         if log:
             # Log the sequence.
             print(colored('alchemist db', 'grey'),
@@ -197,7 +200,7 @@ def flush(names=None, sql=False, log=False):
                   file=sys.stderr)
 
         # Iterate through all tables; deleting those neccessary.
-        for table in reversed(base.metadata.sorted_tables):
+        for table in reversed(metadata.sorted_tables):
             if table.exists(engine):
                 # Create the DELETE statement.
                 statement = table.delete()
