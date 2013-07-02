@@ -4,7 +4,7 @@ import weakref
 import re
 from datetime import datetime
 import sqlalchemy as sa
-from sqlalchemy.ext.declarative import declared_attr, DeclarativeMeta
+from sqlalchemy.ext.declarative import declared_attr, DeclarativeMeta, base
 from alchemist.conf import settings
 
 
@@ -54,6 +54,11 @@ class ModelBase(DeclarativeMeta):
         # Nope; this is the base.
         return False
 
+    @property
+    def objects(self):
+        """Create an object session and return the query object."""
+        return __import__('alchemist.db').db.Session().query(self)
+
     def __new__(cls, name, bases, attrs):
         # Don't process further if this is the base.
         if not cls._is_match(bases):
@@ -83,6 +88,9 @@ class ModelBase(DeclarativeMeta):
         # Add metadata and registry to the attributes.
         self.metadata = attrs['metadata'] = self._metadata[package]
 
+        # Attach the declarative initialization routine.
+        self.__init__ = attrs['__init__'] = base._declarative_constructor
+
         # Continue processing.
         super().__init__(name, bases, attrs)
 
@@ -90,6 +98,10 @@ class ModelBase(DeclarativeMeta):
 class Model(metaclass=ModelBase):
 
     __abstract__ = True
+
+    @declared_attr
+    def __manager__(cls):
+        return __import__('alchemist.db').db.Manager
 
     @declared_attr
     def __tablename__(cls):
