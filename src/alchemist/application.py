@@ -41,9 +41,6 @@ class Alchemist(flask.Flask):
         # a property reference to the application.
         sys.modules[package_name] = Package(package_name, self)
 
-        #! Prefix to apply to all routes (used in mounting packages).
-        self._prefix = ''
-
         #! List of late-bound mounts.
         self._mounts = []
 
@@ -128,8 +125,8 @@ class Alchemist(flask.Flask):
         for handler in self._mounts:
             handler()
 
-    def mount(self, url, name):
-        """Prefix the route decorator and import the package.
+    def mount(self, name):
+        """Import the package after configuration.
 
         Calls to `mount` are late-bound and don't actually happen until
         after `configure` is called.
@@ -137,12 +134,7 @@ class Alchemist(flask.Flask):
         # Create a closure and bind the mount function.
         def _handle():
             with self.app_context():
-                self._prefix = url or ''
                 import_module(name)
-                self._prefix = ''
 
         # Add it to the handlers to run.
         self._mounts.append(_handle)
-
-    def route(url, *args, **kwargs):
-        return super().route(self._prefix + url, *args, **kwargs)
