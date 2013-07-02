@@ -23,7 +23,7 @@ setup(
     dependency_links=(
         # flask-script: pypi release does not yet support python 3.x
         'git+git://github.com/techniq/flask-script.git@python3'
-        '#egg=flask-script-1.0.0',
+        '#egg=flask-script-1.0.0-dev',
 
         # sqlalchemy-utils: pypi does not have latest python 3.x support
         'git+git://github.com/kvesteri/sqlalchemy-utils.git'
@@ -46,7 +46,7 @@ setup(
         # The Flask-Script extension provides support for writing external
         # scripts in Flask.
         # <http://flask-script.readthedocs.org/en/latest/>
-        'flask-script == 1.0.0',
+        'flask-script == 1.0.0-dev',
 
         # The Python SQL Toolkit and Object Relational Mapper
         # <http://www.sqlalchemy.org/>
