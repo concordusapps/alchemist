@@ -15,7 +15,7 @@ class TestModelBase:
     @pytest.fixture(autouse=True, scope='class')
     def database(cls, request):
         # Initialize the database access layer.
-        db.init(names=cls.packages)
+        db.init(names=cls.packages, log=False)
 
         # TODO: Load any required fixtures.
 
@@ -30,6 +30,6 @@ class TestModelBase:
 
     def teardown(self):
         # Flush the database access layer.
-        db.flush(names=self.packages)
+        db.flush(names=self.packages, log=False)
 
         # TODO: Re-load any desired fixtures.
