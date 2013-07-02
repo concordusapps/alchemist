@@ -26,12 +26,22 @@ def redirect():
 class Manager(script.Manager):
 
     @classmethod
-    def find_application(cls):
+    def find_application(cls, path=None):
         # Check in every file in the current directory and every file
         # in every directory in the current directory and the next.
         # If there is no application found, iterate backwards and
         # repeat the process.
-        directories = filter(os.path.isdir, chain(glob('*'), glob('*/*')))
+
+        # Get path to use.
+        if path is None:
+            path = os.getcwd()
+
+        # Perform file globbing.
+        globs = chain(glob(os.path.join(path, '*')),
+                      glob(os.path.join(path, '*', '*')))
+
+        # Pull list of directories.
+        directories = filter(os.path.isdir, globs)
         try:
             # Attempt to walk the directories for packages.
             packages = list(pkgutil.walk_packages(directories))
@@ -69,21 +79,19 @@ class Manager(script.Manager):
                 if is_pkg:
                     directory = os.path.join(directory, '..')
 
-                # Change into its directory
-                os.chdir(directory)
+                # Add the directory to the module path.
+                sys.path.append(directory)
 
                 # Return the application.
                 return app
 
         # Detect if we're root.
-        cwd = os.getcwd()
-        if os.path.dirname(cwd) == cwd:
+        if os.path.dirname(path) == path:
             # Yes; we failed to find an application.
             return
 
         # Nope; recurse backwards.
-        os.chdir('..')
-        return cls.find_application()
+        return cls.find_application(path=os.path.dirname(path))
 
     def __init__(self, application=None, *args, **kwargs):
         # If no application is provided; we need to attempt to discover one.
