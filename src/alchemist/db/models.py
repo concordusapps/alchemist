@@ -93,8 +93,10 @@ class Model(metaclass=ModelBase):
 
     @declared_attr
     def __tablename__(cls):
-        name = cls.__name__.lower()
+        package = ModelBase._get_package(cls.__module__).lower()
+        name = '{}.{}'.format(package, cls.__name__.lower())
         name = re.sub(r'([A-Z])', r'_\1', name)
+        name = re.sub(r'\.+', r'_', name)
         return name
 
 
