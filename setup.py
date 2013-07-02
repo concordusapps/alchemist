@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='alchemist',
-    version='0.1.0',
+    version='0.2.0',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Framework :: Flask',
@@ -17,21 +17,22 @@ setup(
     ],
     author='Concordus Applications',
     author_email='support@concordusapps.com',
+    scripts=['bin/alchemist'],
     package_dir={'alchemist': 'src/alchemist'},
     packages=find_packages('src'),
     dependency_links=(
-        # flask-script
+        # flask-script: pypi release does not yet support python 3.x
         'git+git://github.com/techniq/flask-script.git@python3'
         '#egg=flask-script-1.0.0',
-
-        # sqlalchemy-utils
-        'git+git://github.com/concordusapps/sqlalchemy-utils.git@additional'
-        '#egg=sqlalchemy-utils-dev'
     ),
     install_requires=(
         # Cross-platform colored terminal text.
         # <https://pypi.python.org/pypi/colorama>
         'colorama',
+
+        # ANSII Color formatting for output in terminal.
+        # <https://pypi.python.org/pypi/termcolor>
+        'termcolor >= 1.1, < 1.2',
 
         # Flask is a microframework for Python based on Werkzeug,
         # Jinja 2 and good intentions.
@@ -54,11 +55,6 @@ setup(
 
         # SQLAlchemy utilities.
         # <https://github.com/kvesteri/sqlalchemy-utils>.
-        'sqlalchemy-utils == dev',
-
-        # The dateutil module provides powerful extensions to the
-        # standard datetime module.
-        # <http://labix.org/python-dateutil>
-        'python-dateutil'
+        'sqlalchemy-utils'
     ),
 )

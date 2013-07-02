@@ -1,106 +1,119 @@
 # -*- coding: utf-8 -*-
 import flask
-import os
 import sys
-import re
+import types
+import os
+import collections
 import sqlalchemy as sa
-from sqlalchemy import orm
 from importlib import import_module
 
 
-def _apply_site_configuration(application):
-    # Configure the application.
-    # Pull configuration from the project settings module.
-    application.config.from_object('{}.settings'.format(application.name))
+def Package(name, application):
 
-    # Pull configuration from the project-specific settings module.
-    module = '{}_SETTINGS_MODULE'.format(application.name).replace('.', '_')
-    if module in os.environ:
-        application.config.from_envvar(module)
+    # Import the module.
+    module = import_module(name)
 
-    # Pull configuration from the a generic settings module.
-    if 'SETTINGS_MODULE' in os.environ:
-        application.config.from_envvar('SETTINGS_MODULE')
+    # Wrap the module
+    class Inner(type(module)):
 
-    # Detect if were testing.
-    testing = False
-    for arg in sys.argv:
-        if 'test' in arg:
-            testing = True
-            break
+        __path__ = module.__path__
 
-    if testing:
-        # Change configuration if we're testing.
-        application.config['DATABASE_URI'] = 'sqlite:///:memory:'
-        application.config['DATABASE_ENGINE'] = sa.create_engine(
-            application.config['DATABASE_URI'], echo=False)
+        __name__ = module.__name__
 
-        application.config['DATABASE_SESSION'].configure(
-            bind=application.config['DATABASE_ENGINE'])
+        __package__ = module.__package__
+
+        @property
+        def application(self):
+            application.configure()
+            return application
+
+    # Return the module.
+    return Inner(name)
 
 
-def Application(package):
-    # Instantiate the flask application context.
-    context = flask.Flask(package)
+class Alchemist(flask.Flask):
 
-    # Apply site configuration.
-    _apply_site_configuration(context)
+    def __init__(self, package_name):
+        # Initialize the flask application context.
+        super().__init__(package_name)
 
-    if context.config['DATABASE_URI'].startswith('sqlite:'):
-        # If we're running with SQLITE we'd like datbase foreign key support
-        # and REGEXP support.
-        def _sqlite3_regexp(pattern, text):
-            return bool(re.search(pattern, text))
+        # Replace the package with a container module that contains
+        # a property reference to the application.
+        sys.modules[package_name] = Package(package_name, self)
 
-        def _on_connect(connection, record):
-            connection.create_function('regexp', 2, _sqlite3_regexp)
-            connection.execute('PRAGMA foreign_keys=ON')
+    def _apply_site_configuration(self):
+        # Gather configuration from the following places (with precedence):
+        #   1 - $<package.application.name>_SETTINGS_MODULE
+        #   2 - $ALCHEMIST_SETTINGS_MODULE
+        #   3 - <package>.settings
 
-        sa.event.listen(context.config['DATABASE_ENGINE'], 'connect',
-                        _on_connect)
-    
-    # Return the flask context.
-    return context
-
-
-def _add_package_context(application, package, context):
-    with application.app_context():
         try:
-            # Attempt to pull in this context.
-            import_module('{}.{}'.format(package, context))
+            # Attempt to get configuration from the application settings.
+            self.config.from_object('{}.settings'.format(self.name))
 
         except ImportError:
-            # No defined context; skip
+            # No settings module or package.
             pass
 
+        # Attempt to get configuration from the environment variables
+        env = '{}_SETTINGS_MODULE'.format(self.name.upper()).replace('.', '_')
+        for var in ('ALCHEMIST_SETTINGS_MODULE', env):
+            if var in os.environ:
+                self.config.from_envvar(var)
 
-def add_package(application, package, **kwargs):
-    # TODO: Packages could be stored as actual objects so they can be
-    #   queried as to what was installed?
-    # Ensure the PACKAGES configuration is at least an empty array.
-    if not application.config.get('PACKAGES'):
-        application.config['PACKAGES'] = []
+        # Detect if we are being invoked by a test runner.
+        self.config['TESTING'] = False
+        for arg in sys.argv:
+            if 'test' in arg:
+                self.config['TESTING'] = True
+                break
 
-    # Add the package to the PACKAGES configuration.
-    application.config['PACKAGES'].append(package)
+        # Alter configuration if we are being invoked by a test runner.
+        if self.config['TESTING']:
+            # Ensure we use an in-memory sqlite3 database for transactions
+            # to increase speed of testing.
+            if 'DATABASES' in self.config:
+                for name in self.config['DATABASES']:
+                    self.config['DATABASES'][name]['engine'] = 'sqlite'
+                    self.config['DATABASES'][name]['name'] = ':memory:'
 
-    try:
-        # Apply package configuration.
-        application.config.from_object('{}.settings'.format(package))
+    def configure(self):
+        # Configure the application context.
+        # Apply the initial site configuration.
+        self._apply_site_configuration()
 
-    except ImportError:
-        # No settings module.
-        pass
+        with self.app_context():
+            # After the initial configuration is gathered; each registered
+            # package is searched for a settings module or package and that
+            # is loaded then the site configuration is re-applied (to
+            # keep precedence).
+            for package in self.config.get('PACKAGES', ()):
+                try:
+                    # Attempt to get configuration from the settings module.
+                    self.config.from_object('{}.settings'.format(package))
 
-    # Apply site configuration.
-    _apply_site_configuration(application)
+                except ImportError:
+                    # No settings module in package.
+                    pass
 
-    # Set argument defaults.
-    kwargs.setdefault('models', True)
-    kwargs.setdefault('api', True)
-    kwargs.setdefault('views', True)
+                try:
+                    # Attempt to import the model module or package.
+                    import_module('{}.models'.format(package))
 
-    # Register the package in all requested contexts.
-    for context in ('models', 'api', 'views'):
-        if kwargs[context]:
-            _add_package_context(application, package, context)
+                except ImportError:
+                    # No component in package.
+                    pass
+
+                # Re-apply the initial site configuration.
+                self._apply_site_configuration()
+
+        # Process database configuration.
+        # Expand each reference into a database engine.
+        # TODO: Support PORT, HOST, USERNAME, and PASSWORD
+        for name in self.config.get('DATABASES', ()):
+            db = self.config['DATABASES'][name]
+            if isinstance(db, collections.Mapping):
+                uri = '{}:///{}'.format(db['engine'], db['name'])
+                echo = db.get('echo', False)
+                engine = sa.create_engine(uri, echo=echo)
+                self.config['DATABASES'][name] = engine

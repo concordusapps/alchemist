@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
-from .application import Application, add_package
-from . import commands
+# # -*- coding: utf-8 -*-
+from .application import Alchemist
+# from . import commands
 
 __all__ = [
-    'Application',
-    'add_package',
-    'commands'
+    'Alchemist',
+#     'add_package',
+#     'commands'
 ]

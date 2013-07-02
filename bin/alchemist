@@ -1,0 +1,13 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+import sys
+from alchemist import management
+
+if __name__ == "__main__":
+    # TODO: Enumerate
+
+    # Construct the management utility.
+    manager = management.Manager()
+
+    # Execute and run commands from the command line arguments.
+    manager.run()
