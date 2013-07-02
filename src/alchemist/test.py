@@ -30,6 +30,6 @@ class TestModelBase:
 
     def teardown(self):
         # Flush the database access layer.
-        db.flush(names=cls.packages)
+        db.flush(names=self.packages)
 
         # TODO: Re-load any desired fixtures.
