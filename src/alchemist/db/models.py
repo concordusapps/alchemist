@@ -126,9 +126,11 @@ class Model(metaclass=ModelBase):
             db.session.commit()
 
 
-class Timestamp:
+class Timestamp(db.Model):
     """Records when a model has been created and updated.
     """
+
+    __abstract__ = True
 
     created = sa.Column(
         sa.DateTime, default=datetime.utcnow, nullable=False,
