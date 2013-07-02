@@ -23,8 +23,12 @@ class Manager(Query):
                 manager_cls = entity.__manager__
                 for fname in filter(not_private, dir(manager_cls)):
                     fn = getattr(manager_cls, fname)
-                    if isinstance(fn, types.FunctionType):
+                    try:
                         setattr(self, fname, types.MethodType(fn, self))
+
+                    except TypeError:
+                        # Not callable; keep going.
+                        continue
 
         # Continue the initialization.
         super(Manager, self).__init__(entities, *args, **kwargs)
