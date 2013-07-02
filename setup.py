@@ -18,12 +18,16 @@ setup(
     author='Concordus Applications',
     author_email='support@concordusapps.com',
     scripts=['bin/alchemist'],
-    package_dir={'alchemist': 'src/alchemist'},
+    package_dir={'alchemist': 'bisrc/alchemist'},
     packages=find_packages('src'),
     dependency_links=(
         # flask-script: pypi release does not yet support python 3.x
         'git+git://github.com/techniq/flask-script.git@python3'
         '#egg=flask-script-1.0.0',
+
+        # sqlalchemy-utils: pypi does not have latest python 3.x support
+        'git+git://github.com/kvesteri/sqlalchemy-utils/pull/6'
+        '#egg=sqlalchemy-utils-dev'
     ),
     install_requires=(
         # Cross-platform colored terminal text.
@@ -55,6 +59,6 @@ setup(
 
         # SQLAlchemy utilities.
         # <https://github.com/kvesteri/sqlalchemy-utils>.
-        'sqlalchemy-utils'
+        'sqlalchemy-utils == dev'
     ),
 )
