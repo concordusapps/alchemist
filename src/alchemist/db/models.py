@@ -3,6 +3,11 @@ from datetime import datetime
 import sqlalchemy as sa
 
 
+class Model:
+
+    pass
+
+
 class Timestamp:
     """Records when a model has been created and updated.
     """
