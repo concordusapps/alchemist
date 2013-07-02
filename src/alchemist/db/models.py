@@ -57,7 +57,7 @@ class ModelBase(DeclarativeMeta):
     @property
     def objects(self):
         """Create an object session and return the query object."""
-        return __import__('alchemist.db').db.Session().query(self)
+        return __import__('alchemist.db').db.session.query(self)
 
     def __new__(cls, name, bases, attrs):
         # Don't process further if this is the base.
