@@ -13,7 +13,7 @@ from alchemist.conf import settings
 class ModelBase(DeclarativeMeta):
 
     #! The metadata.
-    metadata = sa.MetaData()
+    # metadata = sa.MetaData()
 
     @property
     def _decl_class_registry(self):
@@ -70,31 +70,32 @@ class ModelBase(DeclarativeMeta):
         package = cls._get_package(attrs['__module__'])
         if package not in cls._registry:
             cls._registry[package] = weakref.WeakValueDictionary()
+            cls._metadata[package] = sa.MetaData()
 
         # Set new registry.
         attrs['_class_registry'] = cls._registry[package]
 
+        # Add metadata and registry to the attributes.
+        attrs['metadata'] = cls._metadata[package]
+
+        # Attach the declarative initialization routine.
+        attrs['__init__'] = base._declarative_constructor
+
         # Continue processing.
         return super().__new__(cls, name, bases, attrs)
 
-    def __init__(self, name, bases, attrs):
-        # Don't process further if this is the base.
-        if not self._is_match(bases):
-            return super().__init__(name, bases, attrs)
+    # def __init__(self, name, bases, attrs):
+    #     # Don't process further if this is the base.
+    #     if not self._is_match(bases):
+    #         return super().__init__(name, bases, attrs)
 
-        # Check for existing metadata.
-        package = self._get_package(attrs['__module__'])
-        if package not in self._metadata:
-            self._metadata[package] = sa.MetaData()
+    #     # Check for existing metadata.
+    #     package = self._get_package(attrs['__module__'])
+    #     if package not in self._metadata:
+    #         self._metadata[package] = sa.MetaData()
 
-        # Add metadata and registry to the attributes.
-        self.metadata = attrs['metadata'] = self._metadata[package]
-
-        # Attach the declarative initialization routine.
-        self.__init__ = attrs['__init__'] = base._declarative_constructor
-
-        # Continue processing.
-        super().__init__(name, bases, attrs)
+    #     # Continue processing.
+    #     super().__init__(name, bases, attrs)
 
 
 class Model(metaclass=ModelBase):
@@ -129,8 +130,6 @@ class Model(metaclass=ModelBase):
 class Timestamp:
     """Records when a model has been created and updated.
     """
-
-    __abstract__ = True
 
     created = sa.Column(
         sa.DateTime, default=datetime.utcnow, nullable=False,
