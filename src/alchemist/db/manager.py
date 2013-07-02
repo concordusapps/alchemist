@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import types
 from sqlalchemy.orm.query import Query
 from sqlalchemy.ext.declarative.api import DeclarativeMeta
 
@@ -15,12 +16,14 @@ class Manager(Query):
         #   is taken.
         # Find and apply an object manager defined on the object entity.
         entity = entities[0]
+        not_private = lambda name: not name.startswith('_')
         if isinstance(entity, DeclarativeMeta):
             if hasattr(entity, '__manager__'):
                 manager_cls = entity.__manager__
-                for fname in filter(not_doubleunder, dir(manager_cls)):
+                for fname in filter(not_private, dir(manager_cls)):
                     fn = getattr(manager_cls, fname)
-                    setattr(self, fname, types.MethodType(fn, self))
+                    if isinstance(fn, types.FunctionType):
+                        setattr(self, fname, types.MethodType(fn, self))
 
         # Continue the initialization.
         super(Manager, self).__init__(entities, *args, **kwargs)
