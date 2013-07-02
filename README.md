@@ -36,19 +36,21 @@ tables have not already been created.
 A list of packages may be specified to initialize a specific package or
 set of packages.
 
-This will additionally load an `initial_data` fixture if one is found for each
-initialized package.
+#### alchemist db clear [package0, package1...] [options]
 
-###### --no-initial-data
+Drops the database tables for all packages registered in `PACKAGES` whose
+tables exist in the database.
 
-Use `--no-initial-data` to prevent loading of the `initial_data` fixture
-upon package initialization.
+A list of packages may be specified to drop a specific package or
+set of packages.
 
-#### alchemist db shell [database]
+#### alchemist db flush [package0, package1...] [options]
 
-Runs the command-line client for the specified database (`default` if
-not specified) with the connection parameters specified in the
-settings.
+Delete all data from the database tables all packages registered
+in `PACKAGES` whose tables exist in the database.
+
+A list of packages may be specified to delete data for a specific package or
+set of packages.
 
 ## License
 Unless otherwise noted, all files contained within this project are liensed
