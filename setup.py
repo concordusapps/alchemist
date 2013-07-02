@@ -52,11 +52,6 @@ setup(
         # <http://www.sqlalchemy.org/>
         'sqlalchemy >= 0.8, < 0.9',
 
-        # Model extension interface for SQLAlchemy; similar to
-        # django model managers.
-        # <https://github.com/d1ffuz0r/sqlalchemy-manager>
-        'sqlalchemy-manager',
-
         # SQLAlchemy utilities.
         # <https://github.com/kvesteri/sqlzalchemy-utils>.
         'sqlalchemy-utils == 0.14.0'
