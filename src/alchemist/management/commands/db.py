@@ -48,6 +48,10 @@ def _collect_metadata():
                 for cls in module.__dict__.values():
                     meta = getattr(cls, 'metadata', None)
                     if meta and isinstance(meta, sa.MetaData):
+                        if meta in metadata.values():
+                            # Duplicate; keep looking.
+                            continue
+
                         # Found a match; move along.
                         metadata[name] = meta
                         continue
