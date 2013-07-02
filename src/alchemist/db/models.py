@@ -126,7 +126,7 @@ class Model(metaclass=ModelBase):
             db.session.commit()
 
 
-class Timestamp(Model):
+class Timestamp:
     """Records when a model has been created and updated.
     """
 
