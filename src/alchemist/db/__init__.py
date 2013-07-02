@@ -28,7 +28,7 @@ class Inner(types.ModuleType):
     @property
     def Session(self):
         # Save these for reference.
-        bind = self.settings['DATABASES']['default']
+        settings = self.settings
         Manager = self.Manager
 
         # Construct an inner class to late-bind configuration.
@@ -36,7 +36,7 @@ class Inner(types.ModuleType):
 
             def __init__(self, *args, **kwargs):
                 # Default the bind and query class.
-                kwargs.setdefault('bind', bind)
+                kwargs.setdefault('bind', settings['DATABASES']['default'])
                 kwargs.setdefault('query_cls', Manager)
 
                 # Continue the initialization.
