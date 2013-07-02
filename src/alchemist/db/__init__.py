@@ -27,7 +27,7 @@ class Inner(types.ModuleType):
 
     @property
     def Session(self):
-        return self.orm.Session(
+        return self.orm.sessionmaker(
             bind=self.settings['DATABASES']['default'],
             query_cls=self.Manager)
 
