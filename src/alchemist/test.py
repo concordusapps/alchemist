@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 import flask
-from alchemist.db import Session
+from alchemist.db import session
 from alchemist.conf import settings
 from alchemist.management.commands import db
 from wsgi_intercept import add_wsgi_intercept, remove_wsgi_intercept
@@ -49,13 +49,16 @@ class TestBase:
 
     def setup_class(cls):
         # Instantiate a session to the database.
-        cls.session = Session()
+        cls.session = session
 
         # Create a shortcut for querying because we're all lazy and we
         # know it.
         cls.Q = lambda s, x: cls.session.query(x)
 
     def teardown(self):
+        # Rollback the session.
+        session.rollback()
+
         # Flush the database access layer.
         db.flush(names=self.packages, echo=False)
 
