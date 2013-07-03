@@ -3,7 +3,7 @@ import flask
 import sys
 import types
 import os
-import collections
+from collections import Mapping
 import sqlalchemy as sa
 from importlib import import_module
 
@@ -77,8 +77,9 @@ class Alchemist(flask.Flask):
             # to increase speed of testing.
             if 'DATABASES' in self.config:
                 for name in self.config['DATABASES']:
-                    self.config['DATABASES'][name]['engine'] = 'sqlite'
-                    self.config['DATABASES'][name]['name'] = ':memory:'
+                    if isinstance(self.config['DATABASES'][name], Mapping):
+                        self.config['DATABASES'][name]['engine'] = 'sqlite'
+                        self.config['DATABASES'][name]['name'] = ':memory:'
 
     def configure(self):
         # Configure the application context.
@@ -115,7 +116,7 @@ class Alchemist(flask.Flask):
         # TODO: Support PORT, HOST, USERNAME, and PASSWORD
         for name in self.config.get('DATABASES', ()):
             db = self.config['DATABASES'][name]
-            if isinstance(db, collections.Mapping):
+            if isinstance(db, Mapping):
                 uri = '{}:///{}'.format(db['engine'], db['name'])
                 echo = db.get('echo', False)
                 engine = sa.create_engine(uri, echo=echo)

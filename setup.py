@@ -55,5 +55,11 @@ setup(
         # SQLAlchemy utilities.
         # <https://github.com/kvesteri/sqlzalchemy-utils>.
         'sqlalchemy-utils == 0.15.0'
+
+        # Requests.
+        # Requests takes all of the work out of Python HTTP/1.1 — making your
+        # integration with web services seamless.
+        # <http://docs.python-requests.org/en/latest/>
+        'requests'
     ),
 )
