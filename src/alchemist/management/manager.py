@@ -3,12 +3,14 @@ import sys
 import os
 import flask
 import contextlib
+import traceback
 from glob import glob
 from importlib import import_module
 from itertools import chain
 from flask.ext import script
 import pkgutil
 import colorama
+import io
 from . import commands
 
 
@@ -25,8 +27,10 @@ def redirect():
 
 class Manager(script.Manager):
 
+    _exec_log = []
+
     @classmethod
-    def find_application(cls, path=None):
+    def find_application(cls, path=None, verbose=False):
         # Check in every file in the current directory and every file
         # in every directory in the current directory and the next.
         # If there is no application found, iterate backwards and
@@ -46,7 +50,7 @@ class Manager(script.Manager):
             # Attempt to walk the directories for packages.
             packages = list(pkgutil.walk_packages(directories))
 
-        except (SystemError, ImportError, NameError, RuntimeError):
+        except:
             # Failed for some reason or other; move along.
             packages = ()
 
@@ -60,17 +64,29 @@ class Manager(script.Manager):
                 # Attempt to import the module.
                 module = imp.find_module(name).load_module()
 
-            except (SystemError, ImportError, NameError, RuntimeError):
+            except:
                 # Failed for some reason or other; move along.
+                cls._exec_log.append(sys.exc_info())
+
+                # Move along and try somewhere else.
                 continue
 
-            # Re-import the module using the standard loader.
-            module = import_module(module.__name__)
+            try:
+                # Re-import the module using the standard loader.
+                module = import_module(module.__name__)
 
-            # Check for an `.app` or an `.application` in the module.
-            app = getattr(module, 'app', None)
-            if app is None:
-                app = getattr(module, 'application', None)
+                # Check for an `.app` or an `.application` in the module.
+                app = getattr(module, 'app', None)
+                if app is None:
+                    app = getattr(module, 'application', None)
+
+            except:
+                # Failed for some reason or other; move along.
+                # Print the error messages to stderr.
+                cls._exec_log.append(sys.exc_info())
+
+                # Die.
+                raise
 
             if app is not None and isinstance(app, flask.Flask):
                 # Found the application.
@@ -93,15 +109,27 @@ class Manager(script.Manager):
         # Nope; recurse backwards.
         return cls.find_application(path=os.path.dirname(path))
 
+    def create_app(self):
+        # We need to attempt to discover one.
+        if self._exec_log:
+            # Print the error messages.
+            for execption in self._exec_log:
+                traceback.print_exception(*execption)
+
+            # Exit the process
+            sys.exit(1)
+
+        # Return the application.
+        return super().create_app()
+
     def __init__(self, application=None, *args, **kwargs):
-        # If no application is provided; we need to attempt to discover one.
-        if application is None:
+        try:
+            # Find an application for configuration.
             with redirect():
                 application = self.find_application()
 
-        # If no application is provided; initialize a default one atleast so
-        # flask-script doesn't break.
-        if application is None:
+        except:
+            # Move along; errors were recorded.
             application = flask.Flask('alchemist')
 
         # Initialize the script manager.
@@ -113,14 +141,19 @@ class Manager(script.Manager):
         # self.add_command(commands.Shell)
         # self.add_command(commands.Fixture)
 
-        # Add the server command to specifiy the default host and port
-        # to be the ones defined in the configuration (if available).
-        self.add_command('runserver', script.Server(
-            host=self.app.config.get('SERVER_HOST'),
-            port=self.app.config.get('SERVER_PORT'),
-            threaded=True))
+        if application is not None:
+            # Add the server command to specifiy the default host and port
+            # to be the ones defined in the configuration (if available).
+            self.add_command('runserver', script.Server(
+                host=application.config.get('SERVER_HOST'),
+                port=application.config.get('SERVER_PORT'),
+                threaded=True))
 
-        # TODO: Add commands from all registered packages.
+        else:
+            # Add a basic server.
+            self.add_command('runserver', script.Server(threaded=True))
+
+        # # TODO: Add commands from all registered packages.
         # This grabs all `management/commands.py` files and introspects them
         # to find all exposed Command subclasses.
 
@@ -147,5 +180,5 @@ class Manager(script.Manager):
 
     def run(self, *args, **kwargs):
         # Ensure we are in the application context while running commands.
-        with self.app.app_context():
-            super().run(*args, **kwargs)
+        # with self.app.app_context():
+        super().run(*args, **kwargs)
