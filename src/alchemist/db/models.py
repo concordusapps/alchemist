@@ -78,9 +78,6 @@ class ModelBase(DeclarativeMeta):
         # Add metadata and registry to the attributes.
         attrs['metadata'] = cls._metadata[package]
 
-        # Attach the declarative initialization routine.
-        attrs['__init__'] = base._declarative_constructor
-
         # Continue processing.
         return super().__new__(cls, name, bases, attrs)
 
@@ -101,6 +98,8 @@ class ModelBase(DeclarativeMeta):
 class Model(metaclass=ModelBase):
 
     __abstract__ = True
+
+    __init__ = base._declarative_constructor
 
     @declared_attr
     def __tablename__(cls):

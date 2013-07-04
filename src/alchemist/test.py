@@ -64,10 +64,13 @@ class TestBase:
 
         # TODO: Re-load any desired fixtures.
 
-    def request(self, path='/', url=None, method='GET', *args, **kwargs):
+    def request(self, path='', url=None, method='GET', *args, **kwargs):
         # Helper to forward the port and host if url is not specified.
         if url is None:
             url = 'http://{}:{}'.format(self.host, self.port)
+
+        # Set some defaults for requests.
+        kwargs.setdefault('allow_redirects', False)
 
         # Forward to requests.
         return getattr(requests, method.lower())(url + path, *args, **kwargs)
