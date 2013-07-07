@@ -138,7 +138,7 @@ class Manager(script.Manager):
         # Add default, always-present commands.
         self.add_command(commands.Show)
         self.add_command(commands.Database)
-        # self.add_command(commands.Shell)
+        self.add_command(commands.Shell)
         # self.add_command(commands.Fixture)
 
         if application is not None:
