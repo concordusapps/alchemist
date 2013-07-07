@@ -149,8 +149,7 @@ class Model(metaclass=ModelBase):
                 yield '%s=%s' % (key, value)
 
         args = '(%s)' % ', '.join(format(reprs()))
-        classy = type(self).__name__
-        return classy + args
+        return '<{}{}>'.format(type(self).__name__, args)
 
 
 class Timestamp:
