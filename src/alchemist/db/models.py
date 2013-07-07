@@ -125,6 +125,33 @@ class Model(metaclass=ModelBase):
             db.session.add(self)
             db.session.commit()
 
+    #! Limit the auto-generated to specific columns.
+    __repr_columns__ = None
+
+    def __repr__(self):
+        def reprs():
+            for col in self.__table__.c:
+                if (self.__repr_columns__ and
+                        col.name not in self.__repr_columns__):
+                    continue
+
+                value = getattr(self, col.name)
+                if not value:
+                    continue
+
+                yield col.name, repr(value)
+
+        def format(seq):
+            for key, value in seq:
+                if not value:
+                    continue
+
+                yield '%s=%s' % (key, value)
+
+        args = '(%s)' % ', '.join(format(reprs()))
+        classy = type(self).__name__
+        return classy + args
+
 
 class Timestamp:
     """Records when a model has been created and updated.
