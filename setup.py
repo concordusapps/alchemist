@@ -27,7 +27,12 @@ setup(
 
         # sqlalchemy-utils: pypi does not have latest python 3.x support
         'git+git://github.com/concordusapps/sqlalchemy-utils.git@additional'
-        '#egg=sqlalchemy-utils-0.15.0'
+        '#egg=sqlalchemy-utils-0.15.0',
+
+        # wsgi_intercept
+        # <https://code.google.com/p/wsgi-intercept/issues/detail?id=25>
+        'git+git://github.com/concordusapps/wsgi-intercept.git'
+        '#egg=wsgi_intercept-0.6.0',
     ),
     install_requires=(
         # Cross-platform colored terminal text.
@@ -55,6 +60,10 @@ setup(
         # SQLAlchemy utilities.
         # <https://github.com/kvesteri/sqlzalchemy-utils>.
         'sqlalchemy-utils == 0.15.0',
+
+        # Installs a WSGI application that intercepts requests made to a
+        # hostname and port combination for testing.
+        'wsgi_intercept == 0.6.0',
 
         # Requests.
         # Requests takes all of the work out of Python HTTP/1.1 — making your
