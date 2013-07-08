@@ -32,19 +32,3 @@ class Manager(Query):
 
         # Continue the initialization.
         super(Manager, self).__init__(entities, *args, **kwargs)
-
-
-    def create(self, *args, **kwargs):
-        """
-        Creation helper; creates an instance of the left-most table with
-        the passed arguments (forwarded to the initialization routine).
-        """
-        # Create the target instance.
-        target = self.entity(*args, **kwargs)
-
-        # Add the target to the session and commit the session.
-        self.session.add(target)
-        self.session.commit()
-
-        # Return the created instance.
-        return target
