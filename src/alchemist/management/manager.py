@@ -96,6 +96,7 @@ class Manager(script.Manager):
                     directory = os.path.join(directory, '..')
 
                 # Add the directory to the module path.
+                app.config['APP_DIR'] = directory
                 sys.path.append(os.path.abspath(directory))
 
                 # Return the application.
@@ -139,6 +140,7 @@ class Manager(script.Manager):
         self.add_command(commands.Show)
         self.add_command(commands.Database)
         self.add_command(commands.Shell)
+        self.add_command(commands.Test)
         # self.add_command(commands.Fixture)
 
         if application is not None:
