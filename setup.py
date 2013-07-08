@@ -65,6 +65,13 @@ setup(
         # hostname and port combination for testing.
         'wsgi_intercept == 0.6.0',
 
+        # A comprehensive HTTP client library that supports many features
+        # left out of other HTTP libraries.
+        # TODO: This is required by wsgi_intercept; either the requirement
+        # needs to removed (preferred) or it needs to be folded into
+        # wsgi_intercept.
+        'httplib2',
+
         # Requests.
         # Requests takes all of the work out of Python HTTP/1.1 — making your
         # integration with web services seamless.
