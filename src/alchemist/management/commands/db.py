@@ -4,7 +4,6 @@ import sys
 import contextlib
 from importlib import import_module
 import sqlalchemy as sa
-from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy import schema
 from sqlalchemy.orm.query import Query
 from alchemist.conf import settings
