@@ -6,7 +6,7 @@ from alchemist import db
 from flask.ext import script
 from termcolor import colored
 from importlib import import_module
-
+import sys
 
 def _collect_models():
     """
@@ -87,3 +87,18 @@ class Shell(script.Shell):
 
         # Continue initialization.
         super().__init__(*args, **kwargs)
+
+    def get_options(self):
+        options = super().get_options()
+        options += script.Option('--pipe', action="store_true", dest='pipe'),
+        return options
+
+    def run(self, pipe, *args, **kwargs):
+        if pipe:
+            # User is trying to run whatever happens to be in stdin.
+            # Go nuts.
+            exec(sys.stdin.read())
+            return
+
+        # Fallback to normal cycle.
+        super().run(*args, **kwargs)
