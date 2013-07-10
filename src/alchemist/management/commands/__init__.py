@@ -3,6 +3,7 @@ from .db import Database
 from .show import Show
 from .shell import Shell
 from .test import Test
+from .load import Load
 # from .fixture import Fixture
 
 __all__ = [
@@ -10,5 +11,6 @@ __all__ = [
     'Show',
     'Shell',
     'Test',
+    'Load',
     # 'Fixture'
 ]

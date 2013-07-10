@@ -141,6 +141,7 @@ class Manager(script.Manager):
         self.add_command(commands.Database)
         self.add_command(commands.Shell)
         self.add_command(commands.Test)
+        self.add_command(commands.Load)
         # self.add_command(commands.Fixture)
 
         if application is not None:
