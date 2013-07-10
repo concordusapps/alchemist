@@ -16,17 +16,25 @@ Run this command to display the current version of the specified component; if u
 
 Contains various commands to control and manage the database.
 
-##### --sql
+###### `--sql`
 
 Use `--sql` on any database operation to not actually perform the operation but print all SQL that would be executed to `stdout`.
 
-#### alchemist db init [package0, package1...] [options]
+##### db init
+
+```sh
+$ alchemist db init [package0, package1...] [options]
+```
 
 Creates the database tables for all packages registered in `PACKAGES` whose tables have not already been created.
 
 A list of packages may be specified to initialize a specific package or set of packages.
 
-#### alchemist db clear [package0, package1...] [options]
+##### db clear
+
+```sh
+$ alchemist db clear [package0, package1...] [options]
+```
 
 Drops the database tables for all packages registered in `PACKAGES` whose tables exist in the database.
 
