@@ -50,8 +50,10 @@ class Manager(script.Manager):
         # Remove unwanted directories.
         def remove(value):
             keep = 'fixtures' not in value
-            keep = 'usr' not in value
-            keep = 'bin' not in value
+            keep = keep and ('usr' not in value)
+            keep = keep and ('.egg' not in value)
+            keep = keep and ('__' not in value)
+            keep = keep and ('bin' not in value)
             return keep
 
         directories = filter(remove, directories)
