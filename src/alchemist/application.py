@@ -66,7 +66,7 @@ class Alchemist(flask.Flask):
 
         # Detect if we are being invoked by a test runner.
         self.config['TESTING'] = False
-        for arg in sys.argv:
+        for arg in sys.argv[0:1]:
             if 'test' in arg:
                 self.config['TESTING'] = True
                 break
