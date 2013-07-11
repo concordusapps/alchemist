@@ -46,6 +46,16 @@ class Manager(script.Manager):
 
         # Pull list of directories.
         directories = filter(os.path.isdir, globs)
+
+        # Remove unwanted directories.
+        def remove(value):
+            keep = 'fixtures' not in value
+            keep = 'usr' not in value
+            keep = 'bin' not in value
+            return keep
+
+        directories = filter(remove, directories)
+
         try:
             # Attempt to walk the directories for packages.
             packages = list(pkgutil.walk_packages(directories))
