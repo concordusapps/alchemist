@@ -4,6 +4,7 @@ import os
 import flask
 import contextlib
 import traceback
+import importlib
 from glob import glob
 from importlib import import_module
 from itertools import chain
@@ -168,12 +169,31 @@ class Manager(script.Manager):
             # Add a basic server.
             self.add_command('runserver', script.Server(threaded=True))
 
+        # Add commands from all registered packages
+        for package in application.config.get('PACKAGES', []):
+            self.add_commands_from_package(package)
+
         # # TODO: Add commands from all registered packages.
         # This grabs all `management/commands.py` files and introspects them
         # to find all exposed Command subclasses.
 
         # Initialize terminal colors for commands and sub-managers.
         colorama.init()
+
+    def add_commands_from_package(self, package):
+        # Add subcommands from a package
+
+        # from thing import commands
+        try:
+            module = importlib.import_module('.commands', package=package)
+        except ImportError:
+            # No commands.
+            return
+
+        for name, item in vars(module).items():
+            if isinstance(item, type) and issubclass(item, script.Manager):
+                # Add the command
+                self.add_command(item)
 
     def add_command(self, command, name=None):
         # Add a named command instance (or sub-manager).

@@ -9,18 +9,18 @@ class Load(Command):
     """
     Loads the passed file, executes it, and commits the scoped
     session afterwards.
-
-    The idea is to eventually extend this command to support:
-
-    @code
-    $ alchemist load <file.(json|yml|py)>
-    $ alchemist load <name>
-    @endcode
-
-    Where the second form would traverse each package and look for a
-    <name>.(json|yml|py) in the package or in a fixtures folder of the
-    package and load each one.
     """
+
+    # The idea is to eventually extend this command to support:
+
+    # @code
+    # $ alchemist load <file.(json|yml|py)>
+    # $ alchemist load <name>
+    # @endcode
+
+    # Where the second form would traverse each package and look for a
+    # <name>.(json|yml|py) in the package or in a fixtures folder of the
+    # package and load each one.
 
     #! Name of the command as it is invoked on the command line.
     name = 'load'
