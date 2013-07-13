@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
 import types
 import sys
-from .models import Model
-from .manager import Manager
 import threading
-from sqlalchemy import orm
-from alchemist.conf import settings
 
 
-# Wrap the module.
-class Inner(types.ModuleType):
+class Module(types.ModuleType):
 
     #! Locally available session object.
     _local = threading.local()
@@ -27,16 +22,18 @@ class Inner(types.ModuleType):
     @property
     def Session(self):
         # Save these for reference.
-        settings = self.settings
-        Manager = self.Manager
+        from sqlalchemy import orm
 
         # Construct an inner class to late-bind configuration.
         class Session(self.orm.Session):
 
             def __init__(self, *args, **kwargs):
+                from alchemist.conf import settings
+                from .query import Query
+
                 # Default the bind and query class.
                 kwargs.setdefault('bind', settings['DATABASES']['default'])
-                kwargs.setdefault('query_cls', Manager)
+                kwargs.setdefault('query_cls', Query)
 
                 # Continue the initialization.
                 super().__init__(*args, **kwargs)
@@ -45,7 +42,7 @@ class Inner(types.ModuleType):
         return Session
 
 # Update the inner module with the actual contents.
-instance = Inner(__name__)
+instance = Module(__name__)
 instance.__dict__.update(sys.modules[__name__].__dict__)
 
 # Store the module wrapper

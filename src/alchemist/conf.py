@@ -2,8 +2,17 @@
 import flask
 import collections
 
+__all__ = [
+    'settings'
+]
+
 
 class Settings(collections.Mapping):
+    """
+    A proxy dictionary-like object that proxies to the current app
+    configuration; or, if not in an active application context, pretends
+    to be an empty dictionary.
+    """
 
     def __getitem__(self, name):
         try:
