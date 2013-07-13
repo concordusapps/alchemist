@@ -41,6 +41,25 @@ class Alchemist(flask.Flask):
         #   2. $ALCHEMIST_SETTINGS_MODULE
         #   3. <project>.settings
 
+        # Set default settings.
+        # The default packages array contains just the alchemist lib which
+        # includes all default commands.
+        self.config['PACKAGES'] = ['alchemist']
+
+        # The default database setting just includes an in-memory sqlite
+        # database.
+        self.config['DATABASES'] = {'default':{
+            'engine': 'sqlite',
+            'name': ':memory:'
+        }}
+
+        # The default server configuration enables threading.
+        self.config['SERVER'] = {
+            'host': 'localhost',
+            'port': 8000,
+            'threading': True
+        }
+
         try:
             # Attempt to get configuration from the project settings.
             self.config.from_object('{}.settings'.format(self.name))
@@ -58,6 +77,10 @@ class Alchemist(flask.Flask):
     def configure(self):
         """Collect settings and configure the application instance."""
 
+        # Establish an application context.
+        context = self.app_context()
+        context.push()
+
         # Detect if we are being invoked by a test runner.
         # Checks the first and second arguments to determine if we are being
         # run by a test runner.
@@ -73,6 +96,9 @@ class Alchemist(flask.Flask):
 
         # Apply the initial site configuration.
         self._apply_site_configuration()
+
+        # Release the application context.
+        context.pop()
 
         # with self.app_context():
         #     # After the initial configuration is gathered; each registered

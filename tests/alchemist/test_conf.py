@@ -18,6 +18,6 @@ class TestSettings:
         from a import application
         with application.app_context():
             assert 'a.b' in settings['PACKAGES']
-            assert settings['PACKAGES'] == ['a.b']
+            assert settings['PACKAGES'][-1] == 'a.b'
             assert len(settings) > 0
             assert len(list(iter(settings))) > 0
