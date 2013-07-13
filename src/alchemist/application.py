@@ -97,33 +97,24 @@ class Alchemist(flask.Flask):
         # Apply the initial site configuration.
         self._apply_site_configuration()
 
+        # After the initial configuration is gathered; each registered
+        # package is searched for a settings module or package and that
+        # is loaded then the site configuration is re-applied (to
+        # keep precedence and allow dynamic behavior).
+        for package in self.config.get('PACKAGES', ()):
+            try:
+                # Attempt to get configuration from the settings module.
+                self.config.from_object('{}.settings'.format(package))
+
+            except ImportError:
+                # No settings module.
+                pass
+
+            # Re-apply the site configuration.
+            self._apply_site_configuration()
+
         # Release the application context.
         context.pop()
-
-        # with self.app_context():
-        #     # After the initial configuration is gathered; each registered
-        #     # package is searched for a settings module or package and that
-        #     # is loaded then the site configuration is re-applied (to
-        #     # keep precedence).
-        #     for package in self.config.get('PACKAGES', ()):
-        #         try:
-        #             # Attempt to get configuration from the settings module.
-        #             self.config.from_object('{}.settings'.format(package))
-
-        #         except ImportError:
-        #             # No settings module in package.
-        #             pass
-
-        #         try:
-        #             # Attempt to import the model module or package.
-        #             import_module('{}.models'.format(package))
-
-        #         except ImportError:
-        #             # No component in package.
-        #             pass
-
-        #         # Re-apply the initial site configuration.
-        #         self._apply_site_configuration()
 
         # # Process database configuration.
         # # Expand each reference into a database engine.

@@ -95,3 +95,8 @@ class TestSettingsResolution(BaseTest):
 
         del os.environ['ALCHEMIST_SETTINGS_MODULE']
         del os.environ['A_SETTINGS_MODULE']
+
+    def test_package(self):
+        from a import application
+
+        assert application.config['SECRET'] == 'COOKIE'
