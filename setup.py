@@ -61,34 +61,31 @@ setup(
         # SQLAlchemy utilities.
         # <https://github.com/kvesteri/sqlzalchemy-utils>.
         'sqlalchemy-utils == 0.15.0',
+
+        # Test runner.
+        'pytest',
+
+        # Ensure PEP8 conformance.
+        'pytest-pep8',
+
+        # Ensure test coverage.
+        'pytest-cov',
+
+        # Installs a WSGI application that intercepts requests made to a
+        # hostname and port combination for testing.
+        'wsgi_intercept == 0.6.0',
+
+        # A comprehensive HTTP client library that supports many features
+        # left out of other HTTP libraries.
+        # TODO: This is required by wsgi_intercept; either the requirement
+        # needs to removed (preferred) or it needs to be folded into
+        # wsgi_intercept.
+        'httplib2',
+
+        # Requests.
+        # Requests takes all of the work out of Python HTTP/1.1 —
+        # making your integration with web services seamless.
+        # <http://docs.python-requests.org/en/latest/>
+        'requests'
     ),
-    extras_require={
-        'test': (
-            # Test runner.
-            'pytest',
-
-            # Ensure PEP8 conformance.
-            'pytest-pep8',
-
-            # Ensure test coverage.
-            'pytest-cov',
-
-            # Installs a WSGI application that intercepts requests made to a
-            # hostname and port combination for testing.
-            'wsgi_intercept == 0.6.0',
-
-            # A comprehensive HTTP client library that supports many features
-            # left out of other HTTP libraries.
-            # TODO: This is required by wsgi_intercept; either the requirement
-            # needs to removed (preferred) or it needs to be folded into
-            # wsgi_intercept.
-            'httplib2',
-
-            # Requests.
-            # Requests takes all of the work out of Python HTTP/1.1 —
-            # making your integration with web services seamless.
-            # <http://docs.python-requests.org/en/latest/>
-            'requests'
-        ),
-    }
 )

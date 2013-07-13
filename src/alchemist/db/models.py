@@ -42,6 +42,10 @@ _model_registry = {}
 class ModelBase(DeclarativeMeta):
 
     @property
+    def _decl_class_registry(self):
+        return getattr(self, '_registry', None)
+
+    @property
     def query(self):
         """Create an object session and return the query object."""
         return __import__('alchemist.db').db.session.query(self)
@@ -64,7 +68,7 @@ class ModelBase(DeclarativeMeta):
             _model_metadata[package] = sa.MetaData()
 
         # Set new registry.
-        attrs['_decl_class_registry'] = _model_registry[package]
+        attrs['_registry'] = _model_registry[package]
 
         # Add metadata and registry to the attributes.
         attrs['metadata'] = _model_metadata[package]
@@ -91,7 +95,7 @@ class Model(metaclass=ModelBase):
         to form a normal name for a table in SQL.
         """
         package = _package_of(cls.__module__).lower()
-        name = '%s.%s' % package, cls.__name__.lower()
+        name = '%s.%s' % (package, cls.__name__.lower())
         name = re.sub(r'([A-Z])', r'_\1', name)
         name = re.sub(r'\.+', r'_', name)
         return name
