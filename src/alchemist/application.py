@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import flask
 import sys
-import types
 import os
 from collections import Mapping
 import sqlalchemy as sa

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# from .session import Session, session
 import types
 import sys
 from .models import Model
