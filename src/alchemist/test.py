@@ -2,13 +2,9 @@
 import pytest
 import flask
 from alchemist.db import session
-from alchemist.conf import settings
 from alchemist.management.commands import db
 from wsgi_intercept import add_wsgi_intercept, remove_wsgi_intercept
 from wsgi_intercept.requests_intercept import install_opener, uninstall_opener
-import socket
-from importlib import import_module
-from alchemist.management.manager import Manager
 import requests
 
 

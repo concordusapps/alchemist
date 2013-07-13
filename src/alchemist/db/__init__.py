@@ -25,7 +25,7 @@ class Module(types.ModuleType):
         from sqlalchemy import orm
 
         # Construct an inner class to late-bind configuration.
-        class Session(self.orm.Session):
+        class Session(orm.Session):
 
             def __init__(self, *args, **kwargs):
                 from alchemist.conf import settings

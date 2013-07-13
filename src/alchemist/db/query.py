@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import types
 from sqlalchemy import orm
 from sqlalchemy.ext.declarative.api import DeclarativeMeta
 
