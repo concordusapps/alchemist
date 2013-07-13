@@ -7,6 +7,7 @@ import sqlalchemy as sa
 
 __all__ = [
     'Alchemist',
+    'application',
 ]
 
 
@@ -134,3 +135,17 @@ class Alchemist(flask.Flask):
         # # Iterate through the delayed mounts and run each handlers.
         # for handler in self._mounts:
         #     handler()
+
+
+class ApplicationProxy:
+    """Proxies access to the current application.
+    """
+
+    def __getattribute__(self, name):
+        # Attempt to proxy to the current application.
+        from flask import current_app
+        return getattr(current_app, name)
+
+
+# Construct the application proxy.
+application = ApplicationProxy()
