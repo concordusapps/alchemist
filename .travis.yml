@@ -1,0 +1,8 @@
+language: python
+python:
+  - '3.3'
+
+install:
+  - 'travis_retry pip install -q -e . --use-mirrors'
+
+script: 'py.test --pep8 --cov armet'
