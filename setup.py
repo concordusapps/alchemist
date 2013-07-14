@@ -5,7 +5,8 @@ from setuptools import setup, find_packages
 setup(
     name='alchemist',
     version='0.2.0',
-    description='A server architecture built on top of a solid foundation provided by flask, sqlalchemy, and various extensions.',
+    description='A server architecture built on top of a solid foundation '
+                'provided by flask, sqlalchemy, and various extensions.',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
