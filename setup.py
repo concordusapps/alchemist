@@ -5,10 +5,9 @@ from setuptools import setup, find_packages
 setup(
     name='alchemist',
     version='0.2.0',
+    description='A server architecture built on top of a solid foundation provided by flask, sqlalchemy, and various extensions.',
     classifiers=[
         'Development Status :: 3 - Alpha',
-        'Framework :: Flask',
-        'Framework :: SQLAlchemy',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
@@ -17,6 +16,7 @@ setup(
     ],
     author='Concordus Applications',
     author_email='support@concordusapps.com',
+    url='http://github.com/concordusapps/alchemist',
     scripts=['bin/alchemist'],
     package_dir={'alchemist': 'src/alchemist'},
     packages=find_packages('src'),
