@@ -8,6 +8,7 @@ import io
 import ipaddress
 from collections import Mapping
 import sqlalchemy as sa
+from sqlalchemy.ext.declarative import DeclarativeMeta
 from importlib import import_module
 from flask import current_app as application
 
@@ -216,7 +217,6 @@ class Alchemist(flask.Flask):
 
             # Initialize models set.
             self.models[name] = set()
-            self.metadata[name] = None
 
             # Check if either the package or the models module has
             # a class named, 'Base', that is of the right type.
@@ -238,9 +238,12 @@ class Alchemist(flask.Flask):
                             # Found a match; move along.
                             self.metadata[name] = meta
 
-                            # Update registry
-                            registry = cls._decl_class_registry
-                            self.models[name].update(set(registry.values()))
+                            # Update registry.
+                            self.models[name].update(set(
+                                filter(lambda o: isinstance(o,
+                                        DeclarativeMeta),
+                                    cls._decl_class_registry.values())))
+
 
                             # Clear modules.
                             modules, package = None, None

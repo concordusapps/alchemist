@@ -15,7 +15,7 @@ PACKAGES = settings['PACKAGES'] + [
 DATABASES = {
     'default': {
         'engine': 'sqlite',
-        'name': ':memory:'
+        'name': 'a.sqlite3'
     },
 
     'other': 'sqlite:///db.sqlite3'

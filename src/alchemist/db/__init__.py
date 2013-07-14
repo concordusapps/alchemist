@@ -38,6 +38,9 @@ class Module(types.ModuleType):
                 # Continue the initialization.
                 super().__init__(*args, **kwargs)
 
+            def __repr__(self):
+                return '<alchemist.db.Session(bind=%r)>' % self.bind
+
         # Return the inner class.
         return Session
 

@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-# from .db import Database
+from .db import Database
 from .show import Show
-# from .shell import Shell
-# from .test import Test
-# from .load import Load
+from .shell import Shell
+from .load import Load
 
 __all__ = [
-    # 'Database',
+    'Database',
     'Show',
-    # 'Shell',
-    # 'Test',
-    # 'Load',
+    'Shell',
+    'Load',
 ]
