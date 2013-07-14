@@ -26,10 +26,6 @@ setup(
         'git+git://github.com/techniq/flask-script.git@python3'
         '#egg=flask-script-1.0.0-dev',
 
-        # sqlalchemy-utils: pypi does not have latest python 3.x support
-        'git+git://github.com/concordusapps/sqlalchemy-utils.git@additional'
-        '#egg=sqlalchemy-utils-0.15.0',
-
         # wsgi_intercept
         # <https://code.google.com/p/wsgi-intercept/issues/detail?id=25>
         'git+git://github.com/concordusapps/wsgi-intercept.git'
@@ -60,7 +56,7 @@ setup(
 
         # SQLAlchemy utilities.
         # <https://github.com/kvesteri/sqlzalchemy-utils>.
-        'sqlalchemy-utils == 0.15.0',
+        'sqlalchemy-utils',
 
         # Test runner.
         'pytest',
