@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
-import io
-import contextlib
 from alchemist import management
 import py
 

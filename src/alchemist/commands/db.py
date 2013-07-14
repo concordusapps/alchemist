@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
-import collections
-import sys
 import contextlib
-from importlib import import_module
-import sqlalchemy as sa
+import datetime
 from sqlalchemy import schema
 from sqlalchemy.orm.query import Query
 from flask.ext import script
-from termcolor import colored
 from alchemist import application
-from alchemist.conf import settings
 from .utils import print_command
 
 
@@ -38,10 +33,10 @@ def _render_statement(statement, bind=None):
             return self.render_literal_value(bindparam.value, bindparam.type)
 
         def render_literal_value(self, value, type_):
-            if isinstance(value, long):
+            if isinstance(value, int):
                 return str(value)
 
-            elif isinstance(value, (date, datetime)):
+            elif isinstance(value, (datetime.date, datetime.datetime)):
                 return "'%s'" % value
 
             return super(LiteralCompiler, self).render_literal_value(

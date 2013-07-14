@@ -239,11 +239,10 @@ class Alchemist(flask.Flask):
                             self.metadata[name] = meta
 
                             # Update registry.
+                            M = DeclarativeMeta
                             self.models[name].update(set(
-                                filter(lambda o: isinstance(o,
-                                        DeclarativeMeta),
-                                    cls._decl_class_registry.values())))
-
+                                filter(lambda o: isinstance(o, M),
+                                       cls._decl_class_registry.values())))
 
                             # Clear modules.
                             modules, package = None, None
