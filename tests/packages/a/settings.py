@@ -10,3 +10,13 @@ BASE_DIR = path.abspath(path.join(path.dirname(__file__), '..', '..'))
 PACKAGES = settings['PACKAGES'] + [
     'a.b',
 ]
+
+# Database configuration.
+DATABASES = {
+    'default': {
+        'engine': 'sqlite',
+        'name': ':memory:'
+    },
+
+    'other': 'sqlite:///db.sqlite3'
+}

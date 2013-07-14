@@ -28,11 +28,11 @@ class Module(types.ModuleType):
         class Session(orm.Session):
 
             def __init__(self, *args, **kwargs):
-                from alchemist.conf import settings
-                from .query import Query
+                from alchemist import application
+                from alchemist.db.query import Query
 
                 # Default the bind and query class.
-                kwargs.setdefault('bind', settings['DATABASES']['default'])
+                kwargs.setdefault('bind', application.databases['default'])
                 kwargs.setdefault('query_cls', Query)
 
                 # Continue the initialization.

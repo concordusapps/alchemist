@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from alchemist.db import models
 import sys
+import pytest
+from alchemist.db import models
 
 
-class TestModels:
+class BaseTest:
 
     def setup(self):
         # Unload all alchemist.* modules and test packages.
@@ -11,6 +12,9 @@ class TestModels:
             for test in ['a', 'a.b', 'a.b.c', 'example', 'alchemist']:
                 if name.startswith(test) and name in sys.modules:
                     del sys.modules[name]
+
+
+class TestModels(BaseTest):
 
     def test_package_resolution_nested_no_context(self):
         assert models._package_of('a.models') == 'a'
@@ -323,3 +327,102 @@ class TestModels:
         assert models.ExampleWall.__table__.name == 'example_examplewall'
 
         context.pop()
+
+
+class TestEngine(BaseTest):
+
+    def test_create(self):
+        from a import application as app
+
+        app.metadata['a.b'].create_all(app.databases['default'])
+
+
+class TestSession(BaseTest):
+
+    def setup(self):
+        # Perform base setup.
+        super().setup()
+
+        # Ensure all models are created.
+        from a import application as app
+        app.metadata['a'].create_all(app.databases['default'])
+        app.metadata['a.b'].create_all(app.databases['default'])
+
+        # Establish the context.
+        self.context = app.app_context()
+        self.context.push()
+
+    def teardown(self):
+        # Release the context.
+        self.context.pop()
+
+    def test_construct(self):
+        from alchemist.db import Session
+
+        # Construct a database session.
+        session = Session()
+
+        from a.models import AWall
+
+        # Create 2 models.
+        session.add(AWall())
+        session.add(AWall())
+
+        # Commit.
+        session.commit()
+
+        # Query.
+        assert len(session.query(AWall).all()) == 2
+
+    def test_scoped_construct(self):
+        from alchemist import db
+        from a.models import AWall
+
+        # Create 2 models.
+        db.session.add(AWall())
+        db.session.add(AWall())
+
+        # Commit.
+        db.session.commit()
+
+        # Query.
+        assert len(db.session.query(AWall).all()) == 2
+
+    def test_save(self):
+        from a.models import AWall
+
+        # Create 2 models.
+        AWall().save()
+        AWall().save(commit=False)
+
+        # Commit.
+        from alchemist.db import session
+        session.commit()
+
+        # Query.
+        assert len(session.query(AWall).all()) == 2
+
+        # Fetch and save.
+        m = session.query(AWall).first()
+        m.id = 43526
+        m.save()
+
+        # Query.
+        assert session.query(AWall).filter_by(id=43526).first() is not None
+
+    def test_query(self):
+        from a.models import AWall
+
+        # Create 2 models and commit.
+        AWall().save()
+        AWall().save()
+
+        # Query.
+        assert len(AWall.query.all()) == 2
+
+    def test_flail(self):
+        from a.models import ABlock
+
+        # Flail.
+        with pytest.raises(RuntimeError):
+            ABlock.query.flail()

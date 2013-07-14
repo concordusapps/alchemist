@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 import flask
+from itertools import chain
 import sys
 import types
 import os
+import io
+import ipaddress
+from collections import Mapping
 import sqlalchemy as sa
+from importlib import import_module
+from flask import current_app as application
 
 __all__ = [
     'Alchemist',
@@ -32,6 +38,91 @@ def wrap_module(name, application):
 
 class Alchemist(flask.Flask):
 
+    @staticmethod
+    def _build_database_uri(testing=False, **kwargs):
+        # Resolve the expanded form into a database URI.
+        o = io.StringIO()
+
+        # Build key names and get properly.
+        def key(name):
+            if testing and ('test_' + name) in kwargs:
+                return 'test_' + name
+
+            return name
+
+        # Add the designated engine.
+        o.write(kwargs[key('engine')])
+        o.write(':///')
+
+        # Add the username.
+        user = False
+        if key('user') in kwargs:
+            o.write(kwargs[key('user')])
+            user = True
+
+        elif key('username') in kwargs:
+            o.write(kwargs[key('username')])
+            user = True
+
+        # Add the password.
+        if user:
+            if key('pass') in kwargs:
+                o.write(':')
+                o.write(kwargs[key('pass')])
+
+            elif key('password') in kwargs:
+                o.write(':')
+                o.write(kwargs[key('password')])
+
+        # Add the hostname.
+        null = 'localhost' if user else None
+        hostname = kwargs.get(key('host'), kwargs.get(key('hostname'), null))
+        if hostname:
+            if user:
+                # Write the user / host separator.
+                o.write('@')
+
+            ipaddr = True
+            try:
+                # Check if this is an ip address.
+                ipaddress.ip_address(hostname)
+                o.write('[')
+
+            except ValueError:
+                # This is not.
+                ipaddr = False
+
+            # Write out the hostname.
+            o.write(hostname)
+            if ipaddr:
+                o.write(']')
+
+        # Add the port.
+        if key('port') in kwargs:
+            o.write(':')
+            o.write(str(kwargs[key('port')]))
+
+        # Add the name.
+        if hostname:
+            o.write('/')
+
+        # Default a testing name if we have one.
+        name = None
+        if testing and 'test_name' not in kwargs:
+            if kwargs[key('engine')] == 'sqlite':
+                name = ':memory:'
+
+            else:
+                name = 'test_' + kwargs['name']
+
+        if name is None:
+            name = kwargs[key('name')]
+
+        o.write(name)
+
+        # Return our constructed URI.
+        return o.getvalue()
+
     def __init__(self, name, *args, **kwargs):
         # Initialize the flask application context.
         super().__init__(name, *args, **kwargs)
@@ -39,6 +130,10 @@ class Alchemist(flask.Flask):
         # Replace the package with a container module that contains
         # a property reference to the application.
         sys.modules[name] = wrap_module(name, self)
+
+        #! Collections of database models and metadata.
+        self.models = {}
+        self.metadata = {}
 
     def _apply_site_configuration(self):
         # Gather configuration from the following places (with precedence):
@@ -50,13 +145,6 @@ class Alchemist(flask.Flask):
         # The default packages array contains just the alchemist lib which
         # includes all default commands.
         self.config['PACKAGES'] = ['alchemist']
-
-        # The default database setting just includes an in-memory sqlite
-        # database.
-        self.config['DATABASES'] = {'default':{
-            'engine': 'sqlite',
-            'name': ':memory:'
-        }}
 
         # The default server configuration enables threading.
         self.config['SERVER'] = {
@@ -106,14 +194,57 @@ class Alchemist(flask.Flask):
         # package is searched for a settings module or package and that
         # is loaded then the site configuration is re-applied (to
         # keep precedence and allow dynamic behavior).
-        for package in self.config.get('PACKAGES', ()):
+        for name in chain(self.config.get('PACKAGES', ()), (self.name,)):
             try:
                 # Attempt to get configuration from the settings module.
-                self.config.from_object('{}.settings'.format(package))
+                self.config.from_object('{}.settings'.format(name))
 
             except ImportError:
                 # No settings module.
                 pass
+
+            try:
+                # Attempt to import a models module or name.
+                models = import_module('{}.models'.format(name))
+
+            except ImportError:
+                # No models module found.
+                models = None
+
+            # Import the name itself.
+            package = import_module(name)
+
+            # Initialize models set.
+            self.models[name] = set()
+            self.metadata[name] = None
+
+            # Check if either the package or the models module has
+            # a class named, 'Base', that is of the right type.
+            for module in package, models:
+                base = getattr(module, 'Base', None)
+                meta = getattr(base, 'metadata', None)
+                if meta and isinstance(meta, sa.MetaData):
+                    # Found a match; move along.
+                    self.metadata[name] = meta
+                    continue
+
+            # Try searching through the namespaces of both the package
+            # and the models module to find the metadata.
+            for module in package, models:
+                if module:
+                    for cls in module.__dict__.values():
+                        meta = getattr(cls, 'metadata', None)
+                        if meta and isinstance(meta, sa.MetaData):
+                            # Found a match; move along.
+                            self.metadata[name] = meta
+
+                            # Update registry
+                            registry = cls._decl_class_registry
+                            self.models[name].update(set(registry.values()))
+
+                            # Clear modules.
+                            modules, package = None, None
+                            break
 
             # Re-apply the site configuration.
             self._apply_site_configuration()
@@ -121,31 +252,18 @@ class Alchemist(flask.Flask):
         # Release the application context.
         context.pop()
 
-        # # Process database configuration.
-        # # Expand each reference into a database engine.
-        # # TODO: Support PORT, HOST, USERNAME, and PASSWORD
-        # for name in self.config.get('DATABASES', ()):
-        #     db = self.config['DATABASES'][name]
-        #     if isinstance(db, Mapping):
-        #         uri = '{}:///{}'.format(db['engine'], db['name'])
-        #         echo = db.get('echo', False)
-        #         engine = sa.create_engine(uri, echo=echo)
-        #         self.config['DATABASES'][name] = engine
+        # Process and resolve database configuration.
+        self.databases = {}
+        for name, db in self.config.get('DATABASES', {}).items():
+            if isinstance(db, Mapping):
+                # Build the database URI.
+                uri = self._build_database_uri(testing=self.testing, **db)
+                echo = db.get('echo', False)
 
-        # # Iterate through the delayed mounts and run each handlers.
-        # for handler in self._mounts:
-        #     handler()
+            else:
+                # The database object should be the URI.
+                uri = db
+                echo = False
 
-
-class ApplicationProxy:
-    """Proxies access to the current application.
-    """
-
-    def __getattribute__(self, name):
-        # Attempt to proxy to the current application.
-        from flask import current_app
-        return getattr(current_app, name)
-
-
-# Construct the application proxy.
-application = ApplicationProxy()
+            # Create the database engine.
+            self.databases[name] = sa.create_engine(uri, echo=echo)
