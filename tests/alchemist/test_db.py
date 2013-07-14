@@ -152,6 +152,12 @@ class TestModels(BaseTest):
         assert e.ExampleWall.__table__ in self._tables(e.ExampleWall)
         assert e.ExampleBlock.__table__ in self._tables(e.ExampleBlock)
 
+    def test_tables_basic_no_context(self):
+        import basic_db
+
+        assert basic_db.Wall.__table__ in self._tables(basic_db.Wall)
+        assert basic_db.Block.__table__ in self._tables(basic_db.Block)
+
     def test_class_registry_nested_with_context(self):
         from a import application
 
@@ -203,6 +209,19 @@ class TestModels(BaseTest):
         assert a.AWall not in self._get_registry(c.CWall)
         assert a.AWall in self._get_registry(a.ABlock)
         assert a.AWall in self._get_registry(a.AWall)
+
+        context.pop()
+
+    def test_class_registry_basic_with_context(self):
+        from basic_db import application
+
+        context = application.app_context()
+        context.push()
+
+        import basic_db
+
+        assert basic_db.Wall in self._get_registry(basic_db.Wall)
+        assert basic_db.Block in self._get_registry(basic_db.Block)
 
         context.pop()
 

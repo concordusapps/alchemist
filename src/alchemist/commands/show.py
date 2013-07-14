@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import flask
 from flask.ext.script import Command
 
 
@@ -11,4 +10,4 @@ class Show(Command):
     name = 'show'
 
     def run(self):
-        print(flask.current_app)
+        print(__import__('alchemist').application)
