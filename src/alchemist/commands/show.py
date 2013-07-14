@@ -6,8 +6,5 @@ class Show(Command):
     """Show the name and package of the application.
     """
 
-    #! Name of the command as it is invoked on the command line.
-    name = 'show'
-
     def run(self):
         print(__import__('alchemist').application)

@@ -58,17 +58,31 @@ def discover():
                 app = getattr(m, 'application', getattr(m, 'app', None))
                 if isinstance(app, flask.Flask):
                     # Found an application object.
-                    return app
+                    # Add it to the system path.
+                    sys.path.append(os.getcwd())
+
+                    # Re-import the module.
+                    m = import_module(module_name)
+
+                    # Return the object.
+                    return getattr(m, 'application', getattr(m, 'app', None))
 
         # Still found nothing; give up.
         return None
 
     # Import the package.
-    package = import_module(name)
+    package = pkgutil.get_importer(os.getcwd()).find_module(name).load_module()
     app = getattr(package, 'application', getattr(package, 'app', None))
     if isinstance(app, flask.Flask):
         # Found an application object.
-        return app
+        # Add it to the system path.
+        sys.path.append(os.getcwd())
+
+        # Re-import the module.
+        package = import_module(name)
+
+        # Return the object.
+        return getattr(package, 'application', getattr(package, 'app', None))
 
 
 class Manager(script.Manager):

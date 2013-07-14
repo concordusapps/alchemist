@@ -5,4 +5,4 @@ from alchemist import management
 
 if __name__ == "__main__":
     # Construct and run the management utility.
-    management.Manager.run()
+    management.Manager().run()
