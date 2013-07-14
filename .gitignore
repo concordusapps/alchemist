@@ -6,6 +6,7 @@
 !.travis*
 
 # Python
+/dist
 /build
 *.pyc
 *.pyo
