@@ -4,5 +4,8 @@ python:
 
 install:
   - 'travis_retry pip install -q -e . --use-mirrors'
+  - 'travis_retry pip install coveralls --use-mirrors'
 
 script: 'py.test --pep8 --cov armet'
+
+after_success: 'coveralls'
