@@ -1,5 +1,6 @@
 # alchemist 
 [![Build Status](https://travis-ci.org/concordusapps/alchemist.png?branch=master)](https://travis-ci.org/concordusapps/alchemist)
+[![Coverage Status](https://coveralls.io/repos/concordusapps/alchemist/badge.png?branch=master)](https://coveralls.io/r/concordusapps/alchemist?branch=master)
 [![PyPi Version](https://pypip.in/v/alchemist/badge.png)](https://pypi.python.org/pypi/alchemist)
 ![PyPi Downloads](https://pypip.in/d/alchemist/badge.png)
 > A server architecture built on top of a solid foundation provided by flask, sqlalchemy, and various extensions.
