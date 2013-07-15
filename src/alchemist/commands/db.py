@@ -146,6 +146,19 @@ def flush(names=None, sql=False, echo=True):
                         connection.execute(statement)
 
 
+def show(names=None):
+    """List all discovered models."""
+    # Iterate through each collected package metadata.
+    for name, metadata in limit_metadata(names).items():
+        # Log the sequence.
+        print_command('alchemist db', 'show', name)
+
+        # Iterate through all tables.
+        for table in metadata.sorted_tables:
+            # Log the sequence.
+            print_command('alchemist db', 'show table', table.name)
+
+
 class Database(script.Manager):
 
     #! Name of the command as it is invoked on the command line.
@@ -158,13 +171,16 @@ class Database(script.Manager):
         # Continue the initialization.
         super().__init__(*args, **kwargs)
 
+        # Declare common option arguments.
+        name_kwargs = dict(
+            dest='names', nargs='*',
+            help='The package to perform the operation on; '
+                 'defaults to all.')
+
         # Add commands.
         for command in [init, clear, flush]:
             # Add the name option to limit operation scope.
-            command = self.option(
-                dest='names', nargs='*',
-                help='The package to perform the operation on; '
-                     'defaults to all.')(command)
+            command = self.option(**name_kwargs)(command)
 
             # Add the SQL option to print SQL instead.
             command = self.option(
@@ -172,3 +188,6 @@ class Database(script.Manager):
                 action='store_true',
                 help='Print the SQL statements to stdout instead '
                      'executing them directly.')(command)
+
+        # Add the show command.
+        self.option(**name_kwargs)(show)
