@@ -11,6 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from importlib import import_module
 from flask import current_app as application
+from .meta import version as __version__
 
 __all__ = [
     'Alchemist',
@@ -222,7 +223,7 @@ class Alchemist(flask.Flask):
             # Create filterer that only grabs instances of DeclarativeMeta.
             restrict = lambda o: set(filter(
                 lambda x: isinstance(x, DeclarativeMeta),
-                    o._decl_class_registry.values()))
+                o._decl_class_registry.values()))
 
             # Try searching through the namespaces of both the package
             # and the models module to find the metadata.

@@ -1,10 +1,19 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
+from os import path
+from pkgutil import get_importer
+
+# Calculate the base directory of the project to get relatives from.
+BASE_DIR = path.abspath(path.dirname(__file__))
+
+# Navigate, import, and retrieve the version of the project.
+VERSION = get_importer(path.join(BASE_DIR, 'src', 'alchemist')).find_module(
+    'meta').load_module().version
 
 setup(
     name='alchemist',
-    version='0.2.1',
+    version=VERSION,
     description='A server architecture built on top of a solid foundation '
                 'provided by flask, sqlalchemy, and various extensions.',
     classifiers=[
@@ -20,7 +29,7 @@ setup(
     url='http://github.com/concordusapps/alchemist',
     scripts=['bin/alchemist'],
     package_dir={'alchemist': 'src/alchemist'},
-    packages=find_packages('src'),
+    packages=find_packages(path.join(BASE_DIR, 'src')),
     entry_points={'pytest11': ['alchemist = alchemist.plugin']},
     dependency_links=(
         # flask-script: pypi release does not yet support python 3.x
