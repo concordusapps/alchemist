@@ -6,7 +6,7 @@ import types
 import os
 import io
 import ipaddress
-from collections import Mapping
+from collections import Mapping, OrderedDict
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from importlib import import_module
@@ -133,8 +133,8 @@ class Alchemist(flask.Flask):
         sys.modules[name] = wrap_module(name, self)
 
         #! Collections of database models and metadata.
-        self.models = {}
-        self.metadata = {}
+        self.models = OrderedDict()
+        self.metadata = OrderedDict()
 
     def _apply_site_configuration(self):
         # Gather configuration from the following places (with precedence):
@@ -195,6 +195,7 @@ class Alchemist(flask.Flask):
         # package is searched for a settings module or package and that
         # is loaded then the site configuration is re-applied (to
         # keep precedence and allow dynamic behavior).
+        all_models = set()
         for name in chain(self.config.get('PACKAGES', ()), (self.name,)):
             try:
                 # Attempt to get configuration from the settings module.
@@ -218,35 +219,29 @@ class Alchemist(flask.Flask):
             # Initialize models set.
             self.models[name] = set()
 
-            # Check if either the package or the models module has
-            # a class named, 'Base', that is of the right type.
-            for module in package, models:
-                base = getattr(module, 'Base', None)
-                meta = getattr(base, 'metadata', None)
-                if meta and isinstance(meta, sa.MetaData):
-                    # Found a match; move along.
-                    self.metadata[name] = meta
-                    continue
+            # Create filterer that only grabs instances of DeclarativeMeta.
+            restrict = lambda o: set(filter(
+                lambda x: isinstance(x, DeclarativeMeta),
+                    o._decl_class_registry.values()))
 
             # Try searching through the namespaces of both the package
             # and the models module to find the metadata.
             for module in package, models:
                 if module:
-                    for cls in module.__dict__.values():
-                        meta = getattr(cls, 'metadata', None)
-                        if meta and isinstance(meta, sa.MetaData):
-                            # Found a match; move along.
-                            self.metadata[name] = meta
+                    for cls in vars(module).values():
+                        if isinstance(cls, type) and cls not in all_models:
+                            meta = getattr(cls, 'metadata', None)
+                            if meta and isinstance(meta, sa.MetaData):
+                                # Found a match; move along.
+                                self.metadata[name] = meta
 
-                            # Update registry.
-                            M = DeclarativeMeta
-                            self.models[name].update(set(
-                                filter(lambda o: isinstance(o, M),
-                                       cls._decl_class_registry.values())))
+                                # Update registry.
+                                self.models[name].update(restrict(cls))
+                                all_models.add(cls)
 
-                            # Clear modules.
-                            modules, package = None, None
-                            break
+                                # Clear modules.
+                                modules, package = None, None
+                                break
 
             # Re-apply the site configuration.
             self._apply_site_configuration()
