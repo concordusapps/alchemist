@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from alchemist.management.manager import Manager
+from alchemist import management
+from os import path
 import sys
 
 
@@ -12,11 +13,7 @@ def pytest_configure(config):
     # by alchemist.
 
     # Discover the application that is being tested against.
-    application = Manager.find_application()
-    if application is not None:
-        # Add the path to the module into the system path so that it
-        # may be imported.
-        sys.path.append(application.__module__)
+    application = management.discover()
 
     # Establish an application context.
     global _app_context
