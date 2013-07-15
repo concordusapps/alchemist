@@ -16,7 +16,15 @@ from .meta import version as __version__
 __all__ = [
     'Alchemist',
     'application',
+    'configured'
 ]
+
+
+# Create signal namespace.
+signals = flask.signals.Namespace()
+
+# Create named signals.
+configured = signals.signal('configured')
 
 
 def wrap_module(name, application):
@@ -247,9 +255,6 @@ class Alchemist(flask.Flask):
             # Re-apply the site configuration.
             self._apply_site_configuration()
 
-        # Release the application context.
-        context.pop()
-
         # Process and resolve database configuration.
         self.databases = {}
         for name, db in self.config.get('DATABASES', {}).items():
@@ -265,3 +270,9 @@ class Alchemist(flask.Flask):
 
             # Create the database engine.
             self.databases[name] = sa.create_engine(uri, echo=echo)
+
+        # Send the configured signal.
+        configured.send(self)
+
+        # Release the application context.
+        context.pop()
