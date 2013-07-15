@@ -52,7 +52,7 @@ def discover():
     if name is None:
         # Not in a python package; iterate through all modules in the
         # current directory and one-level below each.
-        for paths in ['.', (glob.glob('src') + glob.glob('*'))]:
+        for paths in [(glob.glob('src') + glob.glob('*')), 'src']:
             for imp, module_name, _ in pkgutil.iter_modules(paths):
                 m = imp.find_module(module_name).load_module()
                 app = getattr(m, 'application', getattr(m, 'app', None))
