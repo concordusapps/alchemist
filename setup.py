@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='alchemist',
-    version='0.2.0',
+    version='0.2.1',
     description='A server architecture built on top of a solid foundation '
                 'provided by flask, sqlalchemy, and various extensions.',
     classifiers=[
