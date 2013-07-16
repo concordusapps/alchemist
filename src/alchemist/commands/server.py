@@ -13,7 +13,7 @@ class Server(script.Server):
         # Pull server configuration out of configuration.
         server = settings.get('SERVER', {})
         server['host'] = server.get('host', 'localhost')
-        server['host'] = server.get('host', 'localhost')
+        server['port'] = server.get('port', 8000)
         server['threaded'] = server.get('threaded', True)
 
         # Default the server configuration for flask-script.
