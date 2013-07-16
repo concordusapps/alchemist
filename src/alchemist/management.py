@@ -93,22 +93,23 @@ class Manager(script.Manager):
 
     def __init__(self, *args, **kwargs):
         # Attempt to discover an application.
-        application = discover()
+        app = discover()
 
         # Set default arguments.
         kwargs.setdefault('with_default_commands', False)
 
         # Continue initialization.
-        super().__init__(application, *args, **kwargs)
+        super().__init__(app or flask.Flask('alchemist'), *args, **kwargs)
 
         # Establish an application context (if we can).
         context = None
-        if application is not None:
-            context = application.app_context()
+        if app is not None:
+            context = app.app_context()
             context.push()
 
         # Add commands from all registered packages
-        for package in application.config.get('PACKAGES', []):
+        packages = app.config.get('PACKAGES', []) if app else ['alchemist']
+        for package in packages:
             try:
                 # Attempt to load a `.commands` module from the package.
                 module = import_module('.commands', package=package)
@@ -127,8 +128,9 @@ class Manager(script.Manager):
                         # Add the exposed command.
                         self.add_command(obj)
 
-        # Release the application context.
-        context.pop()
+        if context:
+            # Release the application context.
+            context.pop()
 
         # Initialize cross-platform terminal colors.
         colorama.init()

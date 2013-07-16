@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 import sys
+import re
 import os
+import io
 from alchemist import management
 import py
+
+
+def strip_colors(text):
+    return re.sub("\x1b\[\d+m", "", text)
 
 
 class BaseTest:
@@ -91,7 +97,7 @@ class TestCommand(BaseTest):
         sys.argv = self.argv
         os.chdir(self.cwd)
 
-    def test_show(self):
+    def test_show_nested(self):
         os.chdir(os.path.join(self.base, 'packages', 'a'))
 
         capture = py.io.StdCaptureFD()
@@ -118,3 +124,74 @@ class TestCommand(BaseTest):
 
         # Undo exit prevention.
         sys.exit = exit
+
+    def test_db_init_nested(self):
+        os.chdir(os.path.join(self.base, 'packages', 'a'))
+
+        capture = py.io.StdCaptureFD()
+        management.run(['db', 'init'])
+
+        out, err = capture.done()
+
+        text = strip_colors(err.read())
+        lines = [x.strip() for x in text.split('\n')]
+
+        assert lines[0] == 'alchemist db init a'
+        assert lines[3] == 'alchemist db init a.b'
+
+    def test_db_init_nested_name(self):
+        os.chdir(os.path.join(self.base, 'packages', 'a'))
+
+        capture = py.io.StdCaptureFD()
+        management.run(['db', 'init', 'a'])
+
+        out, err = capture.done()
+
+        text = strip_colors(err.read())
+        lines = [x.strip() for x in text.split('\n')]
+
+        assert lines[0] == 'alchemist db init a'
+        assert len(lines) == 4
+
+    def test_db_clear_nested(self):
+        os.chdir(os.path.join(self.base, 'packages', 'a'))
+
+        capture = py.io.StdCaptureFD()
+        management.run(['db', 'clear'])
+
+        out, err = capture.done()
+
+        text = strip_colors(err.read())
+        lines = [x.strip() for x in text.split('\n')]
+
+        assert lines[0] == 'alchemist db clear a.b'
+        assert lines[1] == 'alchemist db clear a'
+
+    def test_db_flush_nested(self):
+        os.chdir(os.path.join(self.base, 'packages', 'a'))
+
+        capture = py.io.StdCaptureFD()
+        management.run(['db', 'flush'])
+
+        out, err = capture.done()
+
+        text = strip_colors(err.read())
+        lines = [x.strip() for x in text.split('\n')]
+
+        assert lines[0] == 'alchemist db flush a.b'
+        assert lines[1] == 'alchemist db flush a'
+
+    def test_shell_context(self):
+        os.chdir(os.path.join(self.base, 'packages', 'a'))
+
+        application = management.discover()
+        with application.app_context():
+            from alchemist.commands import shell
+            from a import models
+
+            context = shell._make_context(quiet=True)
+
+            assert 'session' in context
+            assert 'db' in context
+            assert 'ABlock' in context
+            assert context['ABlock'] == models.ABlock
