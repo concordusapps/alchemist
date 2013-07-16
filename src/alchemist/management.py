@@ -101,6 +101,12 @@ class Manager(script.Manager):
         # Continue initialization.
         super().__init__(application, *args, **kwargs)
 
+        # Establish an application context (if we can).
+        context = None
+        if application is not None:
+            context = application.app_context()
+            context.push()
+
         # Add commands from all registered packages
         for package in application.config.get('PACKAGES', []):
             try:
@@ -120,6 +126,9 @@ class Manager(script.Manager):
                             or issubclass(obj, script.Command)):
                         # Add the exposed command.
                         self.add_command(obj)
+
+        # Release the application context.
+        context.pop()
 
         # Initialize cross-platform terminal colors.
         colorama.init()
