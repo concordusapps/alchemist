@@ -205,7 +205,7 @@ class Alchemist(flask.Flask):
         # is loaded then the site configuration is re-applied (to
         # keep precedence and allow dynamic behavior).
         all_models = set()
-        for name in chain(self.config.get('PACKAGES', ()), (self.name,)):
+        for name in self.config.get('PACKAGES', ()):
             try:
                 # Attempt to get configuration from the settings module.
                 self.config.from_object('{}.settings'.format(name))

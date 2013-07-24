@@ -74,7 +74,7 @@ class TestSettingsResolution(BaseTest):
 
         assert 'PACKAGES' in application.config
         assert application.config['PACKAGES'][0] == 'alchemist'
-        assert application.config['PACKAGES'][1] == 'a.b'
+        assert application.config['PACKAGES'][2] == 'a.b'
 
     def test_env(self):
         os.environ['ALCHEMIST_SETTINGS_MODULE'] = '../alchemist_settings.py'

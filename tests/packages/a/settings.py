@@ -8,6 +8,7 @@ BASE_DIR = path.abspath(path.join(path.dirname(__file__), '..', '..'))
 # List of registered packages.
 # These packages are considered for all database and fixture commands.
 PACKAGES = settings['PACKAGES'] + [
+    'a',
     'a.b',
 ]
 
