@@ -7,7 +7,7 @@ class Server(script.Server):
     """Runs the application server for development use.
     """
 
-    name = 'runserver'
+    name = 'run'
 
     def __init__(self, *args, **kwargs):
         # Pull server configuration out of configuration.
