@@ -245,8 +245,9 @@ class Alchemist(flask.Flask):
                                 self.metadata[name] = meta
 
                                 # Update registry.
-                                self.models[name].update(restrict(cls))
-                                all_models.add(cls)
+                                models = restrict(cls)
+                                self.models[name].update(models)
+                                all_models.update(models)
 
                                 # Clear modules.
                                 modules, package = None, None
