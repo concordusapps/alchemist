@@ -1,4 +1,4 @@
-# alchemist 
+# alchemist
 [![Build Status](https://travis-ci.org/concordusapps/alchemist.png?branch=master)](https://travis-ci.org/concordusapps/alchemist)
 [![Coverage Status](https://coveralls.io/repos/concordusapps/alchemist/badge.png?branch=master)](https://coveralls.io/r/concordusapps/alchemist?branch=master)
 [![PyPi Version](https://pypip.in/v/alchemist/badge.png)](https://pypi.python.org/pypi/alchemist)
@@ -77,7 +77,7 @@ All database commands support the following options:
 $ alchemist db <command> --sql
 ```
 
-Use `--sql` on any database operation to not actually perform the operation but print all SQL that would be executed to stdout`.
+Use `--sql` on any database operation to not actually perform the operation but print all SQL that would be executed to stdout.
 
 #### db init
 
