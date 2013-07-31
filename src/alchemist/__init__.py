@@ -11,7 +11,9 @@ import sqlalchemy as sa
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from importlib import import_module
 from flask import current_app as application
-from .meta import version as __version__
+from .meta import version as __version__, description
+
+sys.modules[__package__].__doc__ = description
 
 __all__ = [
     'Alchemist',
@@ -39,7 +41,7 @@ def wrap_module(name, application):
             return application
 
     # Update the inner module with the actual contents.
-    instance = Module(__name__)
+    instance = Module(name)
     instance.__dict__.update(sys.modules[name].__dict__)
 
     # Return the wrapped module.
