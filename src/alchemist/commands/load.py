@@ -6,16 +6,14 @@ from .utils import print_command
 
 
 class Load(Command):
-    """
-    Loads the passed file, executes it, and commits the scoped
-    session afterwards.
+    """Loads the passed named fixture or file.
     """
 
     # The idea is to eventually extend this command to support:
 
     # @code
-    # $ alchemist load <file.(json|yml|py)>
-    # $ alchemist load <name>
+    # $ alchemist load <file.(json|yml|py)> [--database <database>]
+    # $ alchemist load <name> [--database <database>]
     # @endcode
 
     # Where the second form would traverse each package and look for a
