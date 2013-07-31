@@ -59,7 +59,7 @@ def limit_metadata(names):
 
 
 def init(names=None, sql=False, echo=True):
-    """Initialize the database; create all specified tables."""
+    """Synchronize the database; update all specified packages' tables."""
     # TODO: Support multi-db routing.
     engine = application.databases['default']
 
@@ -75,7 +75,7 @@ def init(names=None, sql=False, echo=True):
                 if echo:
                     # Log the sequence.
                     print_command('alchemist db', 'create', table.name,
-                                  engine.url.database)
+                                  'default')
 
                 if sql:
                     # Print the creation statement.
@@ -103,7 +103,7 @@ def clear(names=None, sql=False, echo=True):
                 if echo:
                     # Log the sequence.
                     print_command('alchemist db', 'drop', table.name,
-                                  engine.url.database)
+                                  'default')
 
                 if sql:
                     # Print the creation statement.
@@ -134,7 +134,7 @@ def flush(names=None, sql=False, echo=True):
                 if echo:
                     # Log the sequence.
                     print_command('alchemist db', 'shell', statement,
-                                  engine.url.database)
+                                  'default')
 
                 if sql:
                     # Log the statement.
