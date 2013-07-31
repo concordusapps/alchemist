@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+from collections import defaultdict
 from flask.ext import script
+from flask.ext.script import Option
 import os
 import sys
 import pkgutil
@@ -7,6 +9,7 @@ import glob
 import flask
 from importlib import import_module
 import colorama
+from termcolor import colored
 
 
 def _is_package():
@@ -89,6 +92,29 @@ def discover():
         return getattr(package, 'application', getattr(package, 'app', None))
 
 
+class Command(script.Command):
+
+    #! The defined name to be invoked.
+    name = None
+
+    #! The defined namespace of the command.
+    #! This is a flexible sub-manager.
+    namespace = None
+
+    def log(self, *args):
+        name = self.namespace if self.namespace else self.name
+        name = 'alchemist %s' % name
+
+        print(colored(name, 'white', attrs=['dark']), *args, file=sys.stderr)
+
+    def warn(self, *args):
+        self.log(colored('WARN', 'yellow', attrs=['bold', 'reverse']), *args)
+
+    def fail(self, *args):
+        self.log(colored('FAIL', 'red', attrs=['bold', 'reverse']), *args)
+        sys.exit(1)
+
+
 class Manager(script.Manager):
 
     def __init__(self, *args, **kwargs):
@@ -100,6 +126,9 @@ class Manager(script.Manager):
 
         # Continue initialization.
         super().__init__(app or flask.Flask('alchemist'), *args, **kwargs)
+
+        # Initialize command list.
+        self.__commands = []
 
         # Establish an application context (if we can).
         context = None
@@ -150,10 +179,26 @@ class Manager(script.Manager):
         if isinstance(command, type):
             command = command()
 
-        # Continue on as normal.
-        return super().add_command(name, command)
+        # Add commands to command list.
+        self.__commands.append((name, command))
 
     def run(self, *args, **kwargs):
+        # Resolve command list.
+        namespaced_commands = defaultdict(lambda: [])
+        for name, command in self.__commands:
+            namespace = getattr(command, 'namespace', None)
+            if namespace:
+                namespaced_commands[namespace].append((name, command))
+                continue
+            super().add_command(name, command)
+
+        # Resolve namespaced commands.
+        for namespace in namespaced_commands:
+            manager = script.Manager()
+            for name, command in namespaced_commands[namespace]:
+                manager.add_command(name, command)
+            super().add_command(namespace, manager)
+
         # Ensure we have an established application context when running
         # commands.
         context = None
