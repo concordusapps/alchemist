@@ -182,23 +182,31 @@ class Manager(script.Manager):
         # Add commands to command list.
         self.__commands.append((name, command))
 
+    def handle(self, *args, **kwargs):
+        if self.__commands:
+            # Resolve command list.
+            namespaced_commands = defaultdict(lambda: [])
+            for name, command in self.__commands:
+                namespace = getattr(command, 'namespace', None)
+                if namespace:
+                    namespaced_commands[namespace].append((name, command))
+                    continue
+                super().add_command(name, command)
+
+            # Clear command list.
+            self.__commands = []
+
+            # Resolve namespaced commands.
+            for namespace in namespaced_commands:
+                manager = script.Manager()
+                for name, command in namespaced_commands[namespace]:
+                    manager.add_command(name, command)
+                super().add_command(namespace, manager)
+
+        # Continue on with handling the command.
+        super().handle(*args, **kwargs)
+
     def run(self, *args, **kwargs):
-        # Resolve command list.
-        namespaced_commands = defaultdict(lambda: [])
-        for name, command in self.__commands:
-            namespace = getattr(command, 'namespace', None)
-            if namespace:
-                namespaced_commands[namespace].append((name, command))
-                continue
-            super().add_command(name, command)
-
-        # Resolve namespaced commands.
-        for namespace in namespaced_commands:
-            manager = script.Manager()
-            for name, command in namespaced_commands[namespace]:
-                manager.add_command(name, command)
-            super().add_command(namespace, manager)
-
         # Ensure we have an established application context when running
         # commands.
         context = None
