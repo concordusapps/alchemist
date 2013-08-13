@@ -16,7 +16,7 @@ def build_database_uri(testing=False, **kwargs):
 
     # Add the designated engine.
     o.write(kwargs[key('engine')])
-    o.write(':///')
+    o.write('://')
 
     # Add the username.
     user = False
@@ -67,8 +67,7 @@ def build_database_uri(testing=False, **kwargs):
         o.write(str(kwargs[key('port')]))
 
     # Add the name.
-    if hostname:
-        o.write('/')
+    o.write('/')
 
     # Default a testing name if we have one.
     name = None

@@ -27,7 +27,7 @@ class TestDatabaseUri:
             port=5432,
             name='example', **{'pass': 'b'})
 
-        assert uri == 'postgresql:///bob:b@localhost:5432/example'
+        assert uri == 'postgresql://bob:b@localhost:5432/example'
 
     def test_user_pass_test(self):
         uri = utils.build_database_uri(
@@ -42,7 +42,7 @@ class TestDatabaseUri:
             test_port=1024,
             name='example')
 
-        assert uri == 'mysql:///a:a@localhost:1024/test_example'
+        assert uri == 'mysql://a:a@localhost:1024/test_example'
 
     def test_user(self):
         uri = utils.build_database_uri(
@@ -51,7 +51,7 @@ class TestDatabaseUri:
             port=5432,
             name='example')
 
-        assert uri == 'postgresql:///bob@localhost:5432/example'
+        assert uri == 'postgresql://bob@localhost:5432/example'
 
     def test_host(self):
         uri = utils.build_database_uri(
@@ -61,7 +61,7 @@ class TestDatabaseUri:
             host='example.com',
             name='example')
 
-        assert uri == 'postgresql:///bob@example.com:5432/example'
+        assert uri == 'postgresql://bob@example.com:5432/example'
 
     def test_host_ip(self):
         uri = utils.build_database_uri(
@@ -71,4 +71,4 @@ class TestDatabaseUri:
             hostname='::1',
             name='example')
 
-        assert uri == 'postgresql:///bob@[::1]:5432/example'
+        assert uri == 'postgresql://bob@[::1]:5432/example'
