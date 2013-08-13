@@ -31,10 +31,6 @@ setup(
     packages=find_packages(path.join(BASE_DIR, 'src')),
     entry_points={'pytest11': ['alchemist = alchemist.plugin']},
     dependency_links=(
-        # flask-script: pypi release does not yet support python 3.x
-        'git+git://github.com/techniq/flask-script.git@python3'
-        '#egg=flask-script-1.0.0-dev',
-
         # wsgi_intercept
         # <https://code.google.com/p/wsgi-intercept/issues/detail?id=25>
         'git+git://github.com/concordusapps/wsgi-intercept.git'
@@ -57,7 +53,7 @@ setup(
         # The Flask-Script extension provides support for writing external
         # scripts in Flask.
         # <http://flask-script.readthedocs.org/en/latest/>
-        'flask-script == 1.0.0-dev',
+        'flask-script >= 0.6.2',
 
         # The Python SQL Toolkit and Object Relational Mapper
         # <http://www.sqlalchemy.org/>
