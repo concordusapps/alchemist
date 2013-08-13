@@ -5,8 +5,8 @@ from alchemist import db
 
 __all__ = [
     'Resource',
+    'ResourceOptions',
     'ModelResource',
-    'ModelResourceOptions'
 ]
 
 

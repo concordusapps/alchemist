@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 import flask
-from itertools import chain
 import sys
 import types
 import os
-import io
-import ipaddress
 from collections import Mapping, OrderedDict
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from importlib import import_module
 from flask import current_app as application
-from .meta import version as __version__, description as __doc__
+from .meta import version as __version__, description as __doc__  # NOQA
 from . import utils
 
 __all__ = [

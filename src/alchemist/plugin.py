@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 from alchemist import management
-from os import path
-import sys
 
 
 #! Global application context.
