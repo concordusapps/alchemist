@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 from collections import defaultdict
 from flask.ext import script
 from flask.ext.script import Option
@@ -136,7 +136,7 @@ class Manager(script.Manager):
             context = app.app_context()
             context.push()
 
-        # Add commands from all registered packages
+        # Add commands from all registered packages.
         packages = app.config.get('PACKAGES', []) if app else ['alchemist']
         for package in packages:
             try:
