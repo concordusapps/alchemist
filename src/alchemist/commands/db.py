@@ -6,43 +6,7 @@ from sqlalchemy.orm.query import Query
 from flask.ext import script
 from alchemist import application
 from .utils import print_command
-
-
-def _render_statement(statement, bind=None):
-    """
-    Generate an SQL expression string with bound parameters rendered inline
-    for the given SQLAlchemy statement.
-
-    Extracted from: <https://gist.github.com/gsakkis/4572159>
-    """
-
-    if isinstance(statement, Query):
-        if bind is None:
-            bind = statement.session.get_bind(
-                statement._mapper_zero_or_none())
-
-        statement = statement.statement
-
-    elif bind is None:
-        bind = statement.bind
-
-    class LiteralCompiler(bind.dialect.statement_compiler):
-
-        def visit_bindparam(self, bindparam, within_columns_clause=False,
-                            literal_binds=False, **kwargs):
-            return self.render_literal_value(bindparam.value, bindparam.type)
-
-        def render_literal_value(self, value, type_):
-            if isinstance(value, int):
-                return str(value)
-
-            elif isinstance(value, (datetime.date, datetime.datetime)):
-                return "'%s'" % value
-
-            return super(LiteralCompiler, self).render_literal_value(
-                value, type_)
-
-    return LiteralCompiler(bind.dialect, statement).process(statement)
+from sqlalchemy_utils import render_statement
 
 
 def limit_metadata(names):
@@ -138,7 +102,7 @@ def flush(names=None, sql=False, echo=True):
 
                 if sql:
                     # Log the statement.
-                    print(str(_render_statement(statement, bind=engine)) + ';')
+                    print(render_statement(statement, bind=engine) + ';')
 
                 else:
                     with contextlib.closing(engine.connect()) as connection:
