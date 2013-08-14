@@ -62,7 +62,7 @@ def clear(names=None, sql=False, echo=True):
             print_command('alchemist db', 'clear', name)
 
         # Iterate through all tables.
-        for table in metadata.sorted_tables:
+        for table in reversed(metadata.sorted_tables):
             if table.exists(engine):
                 if echo:
                     # Log the sequence.
