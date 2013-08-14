@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
+from collections import defaultdict
 from flask.ext.script import Command, Option
 from alchemist import db
+from alchemist.db.models import _package_of
 from .utils import print_command
+from pkgutil import get_importer
+from sqlalchemy import event
+from sqlalchemy.orm import Mapper
 
 
 class Load(Command):
@@ -23,13 +28,48 @@ class Load(Command):
     option_list = [Option(dest='filename')]
 
     def run(self, filename):
-        # Load and execute the file.
-        with open(filename) as stream:
-            exec(stream.read())
+        # Establish a new database session.
+        db._local.instance = session = db.Session()
+
+        # Resolve the absoulte path.
+        path = os.path.abspath(filename)
+
+        # Resolve the module name.
+        name = os.path.basename(os.path.splitext(path)[0])
+
+        # Create a after_* hook so that we can record what happens.
+        models = defaultdict(int)
+        @event.listens_for(Mapper, 'after_insert')
+        def hook(mapper, connection, target):
+            target_cls = type(target)
+            package = _package_of(target_cls.__module__)
+            name = '%s.%s' % (package, target_cls.__name__)
+            models[name] += 1
+
+        try:
+            # Import and execute the file.
+            imp = get_importer(os.path.dirname(filename))
+            imp.find_module(name).load_module(name)
+
+            # Commit the session.
+            session.commit()
+
+        except:
+            # Something happened; rollback the session.
+            session.rollback()
+
+            # Re-raise so the console gets the traceback.
+            raise
+
+        finally:
+            # Close the session.
+            session.close()
+
+        # Get sizes for logging.
+        max_count = len(str(max(models.values())))
 
         # Let the user know.
-        print_command('alchemist', 'load', '%s objects' % len(db.session.new),
-                      os.path.abspath(filename))
-
-        # Commit the session.
-        db.session.commit()
+        for name, count in models.items():
+            print_command('alchemist db', 'insert',
+                          ('{:>%s} {}' % (max_count)).format(count, name),
+                          'default')
