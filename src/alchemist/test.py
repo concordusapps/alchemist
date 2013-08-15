@@ -58,6 +58,9 @@ class TestBase:
         # Flush the database access layer.
         db.flush(names=self.packages, echo=False)
 
+        # Commit all of the deletes.
+        session.commit()
+
         # TODO: Re-load any desired fixtures.
 
     def request(self, path='', url=None, method='GET', *args, **kwargs):
