@@ -26,6 +26,10 @@ class Resource(flask_resources.Resource):
         # Establish a session.
         self.session = session = db.Session()
 
+        # Save a copy of the thread-local stored session so that we can
+        # restore it after this request completes.
+        local_session = db._local.instance
+
         # Bind the session to the thread-local store.
         db._local.instance = self.session
 
@@ -50,8 +54,8 @@ class Resource(flask_resources.Resource):
             # Close the session.
             session.close()
 
-            # Revoke the thread-local session.
-            del db._local.instance
+            # Restore the thread-local session.
+            db._local.instance = local_session
 
 
 class ModelResource(sqlalchemy_resources.ModelResource):
