@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest
 import flask
-from alchemist.db import session
-from alchemist.commands import db
+from alchemist import db
+from alchemist import commands
 from wsgi_intercept import add_wsgi_intercept, remove_wsgi_intercept
 from wsgi_intercept.requests_intercept import install_opener, uninstall_opener
 import requests
@@ -39,31 +39,28 @@ class TestBase:
     @pytest.fixture(autouse=True, scope='class')
     def database(cls, request):
         # Initialize the database access layer.
-        db.init(names=cls.packages, echo=False)
+        commands.db.init(names=cls.packages, echo=False)
 
         # TODO: Load any required fixtures.
 
     def setup_class(cls):
-        # Instantiate a session to the database.
-        cls.session = session
-
         # Create a shortcut for querying because we're all lazy and we
         # know it.
-        cls.Q = lambda s, x: cls.session.query(x)
+        cls.Q = lambda s, x: db.session.query(x)
 
     def teardown(self):
         # Rollback the session.
-        session.rollback()
+        db.session.rollback()
 
         # Flush the database access layer.
-        db.flush(names=self.packages, echo=False)
+        commands.db.flush(names=self.packages, echo=False)
 
         # Commit all of the deletes.
-        session.commit()
+        db.session.commit()
 
         # TODO: Re-load any desired fixtures.
 
-    def request(self, path='', url=None, method='GET', *args, **kwargs):
+    def request(self, path='', url=None, *args, **kwargs):
         # Helper to forward the port and host if url is not specified.
         if url is None:
             url = 'http://{}:{}'.format(self.host, self.port)
@@ -72,7 +69,13 @@ class TestBase:
         kwargs.setdefault('allow_redirects', False)
 
         # Forward to requests.
-        return getattr(requests, method.lower())(url + path, *args, **kwargs)
+        response = requests.request(url + path, *args, **kwargs)
+
+        # Re-initialize the thread-local session transaction.
+        db.session.commit()
+
+        # Return the response.
+        return response
 
     def head(self, *args, **kwargs):
         kwargs.setdefault('method', 'HEAD')
