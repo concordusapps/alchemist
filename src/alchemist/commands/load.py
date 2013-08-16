@@ -39,6 +39,7 @@ class Load(Command):
 
         # Create a after_* hook so that we can record what happens.
         models = defaultdict(int)
+
         @event.listens_for(Mapper, 'after_insert')
         def hook(mapper, connection, target):
             target_cls = type(target)
