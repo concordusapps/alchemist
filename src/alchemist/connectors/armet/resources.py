@@ -28,7 +28,7 @@ class Resource(flask_resources.Resource):
 
         # Save a copy of the thread-local stored session so that we can
         # restore it after this request completes.
-        local_session = db._local.instance
+        local_session = db.session
 
         # Bind the session to the thread-local store.
         db._local.instance = self.session
