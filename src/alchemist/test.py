@@ -69,7 +69,7 @@ class TestBase:
         kwargs.setdefault('allow_redirects', False)
 
         # Forward to requests.
-        response = requests.request(url + path, *args, **kwargs)
+        response = requests.request(*args, url=url + path, **kwargs)
 
         # Re-initialize the thread-local session transaction.
         db.session.commit()
