@@ -59,10 +59,6 @@ class Load(Command):
             # Re-raise so the console gets the traceback.
             raise
 
-        finally:
-            # Close the session.
-            db.close()
-
         # Get sizes for logging.
         max_count = len(str(max(models.values())))
 

@@ -1,48 +1,17 @@
 # -*- coding: utf-8 -*-
 import pytest
-import flask
 from alchemist import db, commands, application
-from wsgi_intercept import add_wsgi_intercept, remove_wsgi_intercept
-from wsgi_intercept.requests_intercept import install_opener, uninstall_opener
 import threading
 import requests
 
 
 class TestBase:
 
-    #! List of packages used during testing; limits the number of packages
-    #! that are reset after each test run.
-    #! Default: reset all packages.
-    packages = None
-
     #! Host at which the test server will bein intercepted at.
     host = 'localhost'
 
     #! Port at which the test server will being intercepted at.
     port = 5000
-
-    @pytest.fixture(autouse=True, scope='class')
-    def server(cls, request):
-        # Install the WSGI interception layer.
-        install_opener()
-
-        # Enable the WSGI interception layer.
-        add_wsgi_intercept(cls.host, cls.port, lambda: flask.current_app)
-
-        # Add a finalizer to remove the interception layer.
-        def finalize():
-            remove_wsgi_intercept(cls.host, cls.port)
-            uninstall_opener()
-
-        request.addfinalizer(finalize)
-
-    @pytest.fixture(autouse=True, scope='class')
-    def database(cls, request):
-        # Initialize the database access layer.
-        commands.db.clear(names=cls.packages, echo=False)
-        commands.db.init(names=cls.packages, echo=False)
-
-        # TODO: Load any required fixtures.
 
     def setup_class(cls):
         # Create a shortcut for querying because we're all lazy and we
@@ -54,7 +23,7 @@ class TestBase:
         db.rollback()
 
         # Flush the database access layer.
-        commands.db.flush(names=self.packages, echo=False)
+        commands.db.flush(echo=False)
 
         # Commit all of the deletes.
         db.commit()
@@ -69,13 +38,8 @@ class TestBase:
         # Set some defaults for requests.
         kwargs.setdefault('allow_redirects', False)
 
-       # Forward to requests.
-        with application.app_context():
-            response = requests.request(*args, url=url + path, **kwargs)
-
-        # Refresh the current session (remove its transaction lock so
-        # changes will be seen).
-        db.commit()
+        # Forward to requests.
+        response = requests.request(*args, url=url + path, **kwargs)
 
         # Return the response.
         return response

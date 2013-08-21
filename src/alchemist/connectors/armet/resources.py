@@ -34,10 +34,6 @@ class Resource(flask_resources.Resource):
             # Re-raise the exception.
             raise
 
-        finally:
-            # Remove our reference to the locally-aquired session.
-            db.remove()
-
 
 class ModelResource(sqlalchemy_resources.ModelResource):
 

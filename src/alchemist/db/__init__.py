@@ -5,30 +5,40 @@ import sys
 
 class Module(types.ModuleType):
 
-    def __init__(self, *args, **kwargs):
+    def _scoped_session(self):
         from sqlalchemy import orm
-
-        # Initialize our module first.
-        super().__init__(*args, **kwargs)
 
         # Create a scope function that keys on the application context.
         def scopefunc():
-            import flask
-            return id(flask._app_ctx_stack.top)
+            return id(__import__('flask')._app_ctx_stack.top)
 
         # Create the scoped session factory which automatically creates
         # sessions when it needs to when accessed.
-        self.Session = orm.scoped_session(
-            self.create_session, scopefunc=scopefunc)
+        factory = orm.scoped_session(self.Session, scopefunc=scopefunc)
+
+        # Bind the context teardown to release the scoped session.
+        from alchemist import application, configured
+
+        @configured.connect_via(application)
+        def configure(sender):
+            @sender.teardown_appcontext
+            def teardown(exception):
+                self._scoped_session.remove()
+
+        # Replace ourself with the factory.
+        self._scoped_session = factory
+
+        # Run the factory.
+        return self._scoped_session()
 
     @property
     def session(self):
         # Return the available session which is created automatically for
         # the current context if it does not exist.
-        return self.Session()
+        return self._scoped_session()
 
     @property
-    def create_session(self):
+    def Session(self):
         # Save these for reference.
         from sqlalchemy import orm
 
@@ -63,10 +73,6 @@ class Module(types.ModuleType):
     def add(self, *targets):
         """Add the passed targets to the local session."""
         return self.session.add_all(targets)
-
-    def remove(self):
-        """Remove the local reference to the session."""
-        return self.Session.remove()
 
 
 # Update the inner module with the actual contents.
