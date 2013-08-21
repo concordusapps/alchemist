@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import pytest
 import flask
-from alchemist import db
-from alchemist import commands
+from alchemist import db, commands, application
 from wsgi_intercept import add_wsgi_intercept, remove_wsgi_intercept
 from wsgi_intercept.requests_intercept import install_opener, uninstall_opener
+import threading
 import requests
 
 
@@ -39,6 +39,7 @@ class TestBase:
     @pytest.fixture(autouse=True, scope='class')
     def database(cls, request):
         # Initialize the database access layer.
+        commands.db.clear(names=cls.packages, echo=False)
         commands.db.init(names=cls.packages, echo=False)
 
         # TODO: Load any required fixtures.
@@ -50,13 +51,13 @@ class TestBase:
 
     def teardown(self):
         # Rollback the session.
-        db.session.rollback()
+        db.rollback()
 
         # Flush the database access layer.
         commands.db.flush(names=self.packages, echo=False)
 
         # Commit all of the deletes.
-        db.session.commit()
+        db.commit()
 
         # TODO: Re-load any desired fixtures.
 
@@ -68,11 +69,13 @@ class TestBase:
         # Set some defaults for requests.
         kwargs.setdefault('allow_redirects', False)
 
-        # Forward to requests.
-        response = requests.request(*args, url=url + path, **kwargs)
+       # Forward to requests.
+        with application.app_context():
+            response = requests.request(*args, url=url + path, **kwargs)
 
-        # Re-initialize the thread-local session transaction.
-        db.session.commit()
+        # Refresh the current session (remove its transaction lock so
+        # changes will be seen).
+        db.commit()
 
         # Return the response.
         return response

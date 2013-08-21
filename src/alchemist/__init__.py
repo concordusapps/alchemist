@@ -175,15 +175,14 @@ class Alchemist(flask.Flask):
             if isinstance(db, Mapping):
                 # Build the database URI.
                 uri = utils.build_database_uri(testing=self.testing, **db)
-                echo = db.get('echo', False)
 
             else:
                 # The database object should be the URI.
                 uri = db
-                echo = False
 
             # Create the database engine.
-            self.databases[name] = sa.create_engine(uri, echo=echo)
+            self.databases[name] = sa.create_engine(
+                uri, **db.get('options', {}))
 
         # Send the configured signal.
         configured.send(self)

@@ -1,26 +1,34 @@
 # -*- coding: utf-8 -*-
 import types
 import sys
-import threading
 
 
 class Module(types.ModuleType):
 
-    #! Locally available session object.
-    _local = threading.local()
+    def __init__(self, *args, **kwargs):
+        from sqlalchemy import orm
+
+        # Initialize our module first.
+        super().__init__(*args, **kwargs)
+
+        # Create a scope function that keys on the application context.
+        def scopefunc():
+            import flask
+            return id(flask._app_ctx_stack.top)
+
+        # Create the scoped session factory which automatically creates
+        # sessions when it needs to when accessed.
+        self.Session = orm.scoped_session(
+            self.create_session, scopefunc=scopefunc)
 
     @property
     def session(self):
-        # Check for an existing session.
-        if not hasattr(self._local, 'instance'):
-            # No session available; create one.
-            self._local.instance = self.Session()
-
-        # Return the available session.
-        return self._local.instance
+        # Return the available session which is created automatically for
+        # the current context if it does not exist.
+        return self.Session()
 
     @property
-    def Session(self):
+    def create_session(self):
         # Save these for reference.
         from sqlalchemy import orm
 
@@ -43,6 +51,23 @@ class Module(types.ModuleType):
 
         # Return the inner class.
         return Session
+
+    # Create helper proxies to the scoped session.
+
+    def commit(self):
+        return self.session.commit()
+
+    def rollback(self, *args, **kwargs):
+        return self.session.rollback(*args, **kwargs)
+
+    def add(self, *targets):
+        """Add the passed targets to the local session."""
+        return self.session.add_all(targets)
+
+    def remove(self):
+        """Remove the local reference to the session."""
+        return self.Session.remove()
+
 
 # Update the inner module with the actual contents.
 instance = Module(__name__)
