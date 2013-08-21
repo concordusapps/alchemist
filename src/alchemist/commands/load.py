@@ -28,9 +28,6 @@ class Load(Command):
     option_list = [Option(dest='filename')]
 
     def run(self, filename):
-        # Establish a new database session.
-        db._local.instance = session = db.Session()
-
         # Resolve the absoulte path.
         path = os.path.abspath(filename)
 
@@ -53,18 +50,18 @@ class Load(Command):
             imp.find_module(name).load_module(name)
 
             # Commit the session.
-            session.commit()
+            db.commit()
 
         except:
             # Something happened; rollback the session.
-            session.rollback()
+            db.rollback()
 
             # Re-raise so the console gets the traceback.
             raise
 
         finally:
             # Close the session.
-            session.close()
+            db.close()
 
         # Get sizes for logging.
         max_count = len(str(max(models.values())))
