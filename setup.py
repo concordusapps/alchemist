@@ -1,15 +1,16 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
+import sys
 from setuptools import setup, find_packages
-from os import path
 from pkgutil import get_importer
 
-# Calculate the base directory of the project to get relatives from.
-BASE_DIR = path.abspath(path.dirname(__file__))
+# Ensure we have a minimum python version.
+if sys.hexversion < 0x30302f0:  # 3.3.2
+    raise RuntimeError(
+        "'alchemist' requires at least version '3.3.2' of python")
 
-# Navigate, import, and retrieve the metadata of the project.
-_imp = get_importer(path.join(BASE_DIR, 'src', 'alchemist'))
-meta = _imp.find_module('meta').load_module('meta')
+# Load and append additional arguments for the setup function
+# from the metadata module.
+meta = get_importer('src/alchemist').find_module('meta').load_module()
 
 setup(
     name='alchemist',
@@ -28,7 +29,7 @@ setup(
     url='http://github.com/concordusapps/alchemist',
     scripts=['bin/alchemist'],
     package_dir={'alchemist': 'src/alchemist'},
-    packages=find_packages(path.join(BASE_DIR, 'src')),
+    packages=find_packages('src'),
     entry_points={'pytest11': ['alchemist = alchemist.plugin']},
     dependency_links=(
         # wsgi_intercept
