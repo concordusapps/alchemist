@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import flask
+import json
 import sys
 import types
 import os
@@ -44,6 +45,27 @@ def wrap_module(name, application):
     return instance
 
 
+class Config(flask.config.Config):
+
+    def from_pyfile(self, filename, silent=False):
+        # Check if this is a JSON file.
+        data = None
+        with open(filename) as stream:
+            try:
+                data = json.load(stream)
+
+            except ValueError:
+                pass
+
+        # Continue on with the process.
+        if data is None:
+            return super().from_pyfile(filename, silent=slient)
+
+        # Found a JSON file; process.
+        for key in data:
+            self[key] = data[key]
+
+
 class Alchemist(flask.Flask):
 
     def __init__(self, name, *args, **kwargs):
@@ -86,9 +108,13 @@ class Alchemist(flask.Flask):
 
         # Attempt to get configuration from the environment variables.
         for name in ['ALCHEMIST', self.name.upper().replace('.', '_')]:
-            var = '%s_SETTINGS_MODULE' % name
-            if var in os.environ:
-                self.config.from_envvar(var)
+            self.config.from_envvar('%s_SETTINGS_MODULE' % name, silent=True)
+
+    def make_config(self, instance_relative=False):
+        root_path = self.root_path
+        if instance_relative:
+            root_path = self.instance_path
+        return Config(root_path, self.default_config)
 
     def configure(self):
         """Collect settings and configure the application instance."""
