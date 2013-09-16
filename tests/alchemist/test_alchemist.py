@@ -4,6 +4,9 @@ import os
 from alchemist import Alchemist
 
 
+BASE = os.path.join(os.path.dirname(__file__), '..', 'packages')
+
+
 class BaseTest:
 
     def setup(self):
@@ -77,7 +80,8 @@ class TestSettingsResolution(BaseTest):
         assert application.config['PACKAGES'][2] == 'a.b'
 
     def test_env(self):
-        os.environ['ALCHEMIST_SETTINGS_MODULE'] = '../alchemist_settings.py'
+        filename = os.path.join(BASE, 'alchemist_settings.py')
+        os.environ['ALCHEMIST_SETTINGS_MODULE'] = filename
 
         from a import application
 
@@ -87,8 +91,11 @@ class TestSettingsResolution(BaseTest):
         del os.environ['ALCHEMIST_SETTINGS_MODULE']
 
     def test_env_duo(self):
-        os.environ['ALCHEMIST_SETTINGS_MODULE'] = '../alchemist_settings.py'
-        os.environ['A_SETTINGS_MODULE'] = '../settings.py'
+        filename = os.path.join(BASE, 'alchemist_settings.py')
+        os.environ['ALCHEMIST_SETTINGS_MODULE'] = filename
+
+        filename = os.path.join(BASE, 'settings.py')
+        os.environ['A_SETTINGS_MODULE'] = filename
 
         from a import application
 

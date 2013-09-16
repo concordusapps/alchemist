@@ -19,11 +19,9 @@ class Module(types.ModuleType):
         # Bind the context teardown to release the scoped session.
         from alchemist import application, configured
 
-        @configured.connect_via(application)
-        def configure(sender):
-            @sender.teardown_appcontext
-            def teardown(exception):
-                self._scoped_session.remove()
+        @application.teardown_appcontext
+        def teardown(exception):
+            self._scoped_session.remove()
 
         # Replace ourself with the factory.
         self._scoped_session = factory

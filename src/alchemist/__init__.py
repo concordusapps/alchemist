@@ -59,7 +59,7 @@ class Config(flask.config.Config):
 
         # Continue on with the process.
         if data is None:
-            return super().from_pyfile(filename, silent=slient)
+            return super().from_pyfile(filename, silent=silent)
 
         # Found a JSON file; process.
         for key in data:
@@ -201,14 +201,15 @@ class Alchemist(flask.Flask):
             if isinstance(db, Mapping):
                 # Build the database URI.
                 uri = utils.build_database_uri(testing=self.testing, **db)
+                options = db.get('options', {})
 
             else:
                 # The database object should be the URI.
                 uri = db
+                options = {}
 
             # Create the database engine.
-            self.databases[name] = sa.create_engine(
-                uri, **db.get('options', {}))
+            self.databases[name] = sa.create_engine(uri, **options)
 
         # Send the configured signal.
         configured.send(self)
