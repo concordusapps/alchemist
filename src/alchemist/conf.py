@@ -14,6 +14,13 @@ class Settings(collections.Mapping):
     to be an empty dictionary.
     """
 
+    def __getattr__(self, name):
+        try:
+            return self[name]
+
+        except KeyError:
+            raise AttributeError
+
     def __getitem__(self, name):
         try:
             return flask.current_app.config[name]
