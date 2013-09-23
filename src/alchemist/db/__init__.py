@@ -5,7 +5,7 @@ import sys
 
 class Module(types.ModuleType):
 
-    def _scoped_session(self):
+    def _configure(self):
         from sqlalchemy import orm
 
         # Create a scope function that keys on the application context.
@@ -23,11 +23,8 @@ class Module(types.ModuleType):
         def teardown(exception):
             self._scoped_session.remove()
 
-        # Replace ourself with the factory.
+        # Add a factory.
         self._scoped_session = factory
-
-        # Run the factory.
-        return self._scoped_session()
 
     @property
     def session(self):

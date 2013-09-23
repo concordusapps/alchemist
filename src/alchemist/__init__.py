@@ -211,6 +211,10 @@ class Alchemist(flask.Flask):
             # Create the database engine.
             self.databases[name] = sa.create_engine(uri, **options)
 
+        # Configure the database engine.
+        from alchemist import db
+        db._configure()
+
         # Send the configured signal.
         configured.send(self)
 
