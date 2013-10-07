@@ -1,78 +1,34 @@
 # -*- coding: utf-8 -*-
-import types
-import sys
+from flask import g, appcontext_tearing_down
+from alchemist import app
+from werkzeug.local import LocalProxy
+import sqlalchemy as sa
+from sqlalchemy.orm import Session
 
 
-class Module(types.ModuleType):
-
-    def _configure(self):
-        from sqlalchemy import orm
-
-        # Create a scope function that keys on the application context.
-        def scopefunc():
-            return id(__import__('flask')._app_ctx_stack.top)
-
-        # Create the scoped session factory which automatically creates
-        # sessions when it needs to when accessed.
-        factory = orm.scoped_session(self.Session, scopefunc=scopefunc)
-
-        # Bind the context teardown to release the scoped session.
-        from alchemist import application, configured
-
-        @application.teardown_appcontext
-        def teardown(exception):
-            self._scoped_session.remove()
-
-        # Add a factory.
-        self._scoped_session = factory
-
-    @property
-    def session(self):
-        # Return the available session which is created automatically for
-        # the current context if it does not exist.
-        return self._scoped_session()
-
-    @property
-    def Session(self):
-        # Save these for reference.
-        from sqlalchemy import orm
-
-        # Construct an inner class to late-bind configuration.
-        class Session(orm.Session):
-
-            def __init__(self, *args, **kwargs):
-                from alchemist import application
-                from alchemist.db.query import Query
-
-                # Default the bind and query class.
-                kwargs.setdefault('bind', application.databases['default'])
-                kwargs.setdefault('query_cls', Query)
-
-                # Continue the initialization.
-                super().__init__(*args, **kwargs)
-
-            def __repr__(self):
-                return '<alchemist.db.Session(bind=%r)>' % self.bind
-
-        # Return the inner class.
-        return Session
-
-    # Create helper proxies to the scoped session.
-
-    def commit(self):
-        return self.session.commit()
-
-    def rollback(self, *args, **kwargs):
-        return self.session.rollback(*args, **kwargs)
-
-    def add(self, *targets):
-        """Add the passed targets to the local session."""
-        return self.session.add_all(targets)
+# TODO: resolve DATABASE configuration to create appropriate engines
+# TODO: discover models using COMPONENTS to create
+#   db.metadata and db._decl_class_registry
 
 
-# Update the inner module with the actual contents.
-instance = Module(__name__)
-instance.__dict__.update(sys.modules[__name__].__dict__)
+def create_session():
+    engine = sa.create_engine('sqlite:///:memory:')
+    return Session(bind=engine)
 
-# Store the module wrapper
-sys.modules[__name__] = instance
+
+def _get_session():
+    _session = getattr(g, '_session', None)
+    if _session is None:
+        _session = g._session = create_session()
+
+    return _session
+
+
+@appcontext_tearing_down.connect
+def _teardown_session(*args, **kwargs):
+    _session = getattr(g, '_session', None)
+    if _session is not None:
+        _session.close()
+
+
+session = LocalProxy(_get_session)

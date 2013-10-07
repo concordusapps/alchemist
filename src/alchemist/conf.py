@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import flask
+from alchemist import app
 import collections
 
 __all__ = [
@@ -23,31 +23,32 @@ class Settings(collections.Mapping):
 
     def __getitem__(self, name):
         try:
-            return flask.current_app.config[name]
+            return app.application.config[name]
 
-        except RuntimeError:
+        except (AttributeError, RuntimeError):
             raise KeyError
 
     def __contains__(self, name):
         try:
-            return name in flask.current_app.config
+            return name in app.application.config
 
-        except RuntimeError:
+        except (AttributeError, RuntimeError):
             return False
 
     def __len__(self):
         try:
-            return len(flask.current_app.config)
+            return len(app.application.config)
 
-        except RuntimeError:
+        except (AttributeError, RuntimeError):
             return 0
 
     def __iter__(self):
         try:
-            return iter(flask.current_app.config)
+            return iter(app.application.config)
 
         except:
             return iter(())
+
 
 # Instantiate lazy-bound settings object.
 settings = Settings()

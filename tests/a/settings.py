@@ -1,0 +1,2 @@
+A_SETTING = 1
+B_SETTING = 5

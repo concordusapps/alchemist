@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from flask import Flask
 import pytest
 from alchemist.conf import settings
 
@@ -7,17 +8,18 @@ class TestSettings:
 
     def test_no_context(self):
         with pytest.raises(KeyError):
-            settings['PACKAGES']
+            settings['COMPONENTS']
 
-        assert settings.get('PACKAGES') is None
-        assert 'PACKAGES' not in settings
+        assert settings.get('COMPONENTS') is None
+        assert 'COMPONENTS' not in settings
         assert len(settings) == 0
         assert len(list(iter(settings))) == 0
 
     def test_with_context(self):
-        from a import application
-        with application.app_context():
-            assert 'a.b' in settings['PACKAGES']
-            assert settings['PACKAGES'][-1] == 'a.b'
+        app = Flask('alchemist')
+        app.config['A_SETTING'] = 1
+        with app.app_context():
+            assert 'A_SETTING' in settings
+            assert settings['A_SETTING'] == 1
             assert len(settings) > 0
             assert len(list(iter(settings))) > 0
