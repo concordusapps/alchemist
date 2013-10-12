@@ -49,7 +49,11 @@ setup(
         # Flask is a microframework for Python based on Werkzeug,
         # Jinja 2 and good intentions.
         # <http://flask.pocoo.org/>
-        'flask >= 0.10, < 0.11',
+        'flask >= 0.10',
+
+        # Fast, simple object-to-object and broadcast signaling
+        # <http://pythonhosted.org/blinker/>
+        'blinker >= 1.3',
 
         # The Flask-Script extension provides support for writing external
         # scripts in Flask.
@@ -58,24 +62,24 @@ setup(
 
         # A simple flask extension to discover files in a declared
         # array of components.
-        'flask-components',
+        'flask-components >= 0.1',
 
         # The Python SQL Toolkit and Object Relational Mapper
         # <http://www.sqlalchemy.org/>
-        'sqlalchemy >= 0.8, < 0.9',
+        'sqlalchemy >= 0.8',
 
         # SQLAlchemy utilities.
         # <https://github.com/kvesteri/sqlzalchemy-utils>.
-        'sqlalchemy-utils',
+        'sqlalchemy-utils >= 0.16',
 
         # Test runner.
-        'pytest',
+        'pytest >= 2.4',
 
         # Ensure PEP8 conformance.
-        'pytest-pep8',
+        'pytest-pep8 >= 1.0',
 
         # Ensure test coverage.
-        'pytest-cov',
+        'pytest-cov >= 1.6',
 
         # Installs a WSGI application that intercepts requests made to a
         # hostname and port combination for testing.

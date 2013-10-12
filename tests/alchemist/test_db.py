@@ -75,3 +75,27 @@ class TestEngine:
         with settings(self.app, DATABASES={'default': config}):
 
             assert db.engine.url.drivername == 'sqlite'
+
+
+class TestSession:
+
+    def setup(self):
+        self.app = Flask('alchemist')
+
+    def test_unbound(self):
+        assert not db.session
+
+    def test_acquire_no_database(self):
+        with raises(ImproperlyConfigured), self.app.app_context():
+            assert db.session
+
+    def test_acquire_default(self):
+        config = {'default': 'sqlite:///:memory:'}
+        with settings(self.app, DATABASES=config), self.app.app_context():
+            assert db.session
+
+    def test_repr(self):
+        config = {'default': 'sqlite:///:memory:'}
+        with settings(self.app, DATABASES=config), self.app.app_context():
+            text = '<Session(bind=%r)>' % db.engine['default']
+            assert repr(db.session) == text

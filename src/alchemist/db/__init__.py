@@ -1,41 +1,25 @@
 # -*- coding: utf-8 -*-
 from ._engine import engine
+from ._session import Session, session
+from .query import Query
 
 
 __all__ = [
     'engine',
+    'Session',
+    'session',
+    'Query',
 ]
 
-# from flask import g, appcontext_tearing_down
-# from alchemist import app
-# from werkzeug.local import LocalProxy
-# import sqlalchemy as sa
-# from sqlalchemy.orm import Session
-
-
-# TODO: resolve DATABASE configuration to create appropriate engines
-# TODO: discover models using COMPONENTS to create
-# #   db.metadata and db._decl_class_registry
-
-
-# def create_session():
-#     engine = sa.create_engine('sqlite:///:memory:')
-#     return Session(bind=engine)
-
-
-# def _get_session():
-#     _session = getattr(g, '_session', None)
-#     if _session is None:
-#         _session = g._session = create_session()
-
-#     return _session
-
-
-# @appcontext_tearing_down.connect
-# def _teardown_session(*args, **kwargs):
-#     _session = getattr(g, '_session', None)
-#     if _session is not None:
-#         _session.close()
-
-
-# session = LocalProxy(_get_session)
+# TODO: Support these options perhaps -- look into them at least.
+# app.config.setdefault('SQLALCHEMY_DATABASE_URI', 'sqlite://')
+# app.config.setdefault('SQLALCHEMY_BINDS', None)
+# app.config.setdefault('SQLALCHEMY_NATIVE_UNICODE', None)
+# app.config.setdefault('SQLALCHEMY_ECHO', False)
+# app.config.setdefault('SQLALCHEMY_RECORD_QUERIES', None)
+# app.config.setdefault('SQLALCHEMY_POOL_SIZE', None)
+# app.config.setdefault('SQLALCHEMY_POOL_TIMEOUT', None)
+# app.config.setdefault('SQLALCHEMY_POOL_RECYCLE', None)
+# app.config.setdefault('SQLALCHEMY_MAX_OVERFLOW', None)
+# app.config.setdefault('SQLALCHEMY_COMMIT_ON_TEARDOWN', False)
+# app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', True)
