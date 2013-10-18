@@ -5,7 +5,9 @@ from alchemist.db.query import Query
 from sqlalchemy.ext.declarative import declared_attr, DeclarativeMeta
 import sqlalchemy as sa
 import weakref
+import re
 import six
+from collections import defaultdict
 
 
 def _component_of(name):
@@ -31,12 +33,80 @@ def _component_of(name):
         return _component_of(name.replace('.models', ''))
 
 
-#! Project-wide model metadata.
+#! Global model metadata.
 _metadata = sa.MetaData()
 
-
-#! Project-wide declarative class registry.
+#! Global declarative class registry.
 _registry = weakref.WeakValueDictionary()
+
+
+class ComponentRegistry(weakref.WeakValueDictionary):
+    """
+    A local registry that is instantiated per-component. This keeps track
+    of model names using just the class name.
+    """
+
+    def __missing__(self, name):
+        return _registry[name]
+
+    def __getitem__(self, name):
+        try:
+            return super(ComponentRegistry, self).__getitem__(name)
+
+        except KeyError:
+            return self.__missing__(name)
+
+    def __contains__(self, name):
+        return (super(ComponentRegistry, self).__contains__(name)
+            or (name in _registry))
+
+    def __setitem__(self, name, value):
+
+        # Store the model in the global registry using shorthand with '__'.
+        # TODO: Use ':' when we can.
+        key = '%s__%s' % (_component_of(value.__module__), name)
+        _registry[key] = value
+
+        # TODO: When we can.
+        # Store the model in the global registry using the full path.
+        # key = '%s__%s' % (value.__module__, name)
+        # _registry[key] = value
+
+        # Store the model in the local registry.
+        super(ComponentRegistry, self).__setitem__(name, value)
+
+
+#! Componentized declarative class registries.
+_registry_map = {}
+
+
+def _is_model(name, bases, attrs):
+
+    if name == 'NewBase' and not attrs and not bases:
+
+        # Six contrivance; ensure we skip it.
+
+        attrs['__abstract__'] = True
+        return False
+
+    for base in bases:
+
+        if (base.__module__.startswith('alchemist.db.model')
+                and base.__name__ == 'NewBase'):
+
+            # This is an internal utility to alchemist.
+
+            continue
+
+        if isinstance(base, ModelBase):
+
+            # This is at least dervied at some point from Model.
+
+            return True
+
+    # This is the base class, Model.
+
+    return False
 
 
 class ModelBase(DeclarativeMeta):
@@ -68,23 +138,21 @@ class ModelBase(DeclarativeMeta):
             Model.query.all()
 
         Equivalent to ::
-            from alchemist import db
-            db.session.query(Model).all()
+            from alchemist.db import session
+            session.query(Model).all()
         """
 
-        return db.session.query(self)
+        return session.query(self)
 
     @property
     def _decl_class_registry(self):
-        return getattr(self.__registry, None)
+        return getattr(self, '_ModelBase__registry', None)
 
     def __new__(cls, name, bases, attrs):
 
-        # Don't process further if this is the base.
+        # Don't process further if this is not a model (ie. the base class).
 
-        if not any(lambda x: isinstance(x, ModelBase), bases):
-
-            # This is the base class; skip.
+        if not _is_model(name, bases, attrs):
 
             return super(ModelBase, cls).__new__(cls, name, bases, attrs)
 
@@ -93,15 +161,35 @@ class ModelBase(DeclarativeMeta):
         # generate its own.
 
         attrs['_component'] = component = _component_of(attrs['__module__'])
+
         if component:
-            attrs['_ModelBase__registry'] = _registry
+            if component not in _registry_map:
+                _registry_map[component] = ComponentRegistry()
+
+            attrs['_ModelBase__registry'] = _registry_map[component]
             attrs['metadata'] = _metadata
 
         else:
             attrs['_ModelBase__registry'] = weakref.WeakValueDictionary()
             attrs['metadata'] = sa.MetaData()
 
+        # Continue instantiation.
+
+        return super(ModelBase, cls).__new__(cls, name, bases, attrs)
+
 
 class Model(six.with_metaclass(ModelBase)):
 
     __abstract__ = True
+
+    @declared_attr
+    def __tablename__(cls):
+        """
+        Underscorizes the class name combined with the pacakge name in order
+        to form a normal name for a table in SQL.
+        """
+        component = cls._component
+        name = '%s.%s' % (component, cls.__name__.lower())
+        name = re.sub(r'([A-Z])', r'_\1', name)
+        name = re.sub(r'\.+', r'_', name)
+        return name

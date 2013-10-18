@@ -2,7 +2,7 @@
 from ._engine import engine
 from ._session import Session, session
 from .query import Query
-from .model import Model
+from .model import Model, _metadata as metadata, _registry_map as registry
 
 
 __all__ = [
@@ -11,6 +11,8 @@ __all__ = [
     'session',
     'Query',
     'Model',
+    'metadata',
+    'registry'
 ]
 
 # TODO: Support these options perhaps -- look into them at least.

@@ -34,6 +34,11 @@ def configure(self, app):
         if component.__package__ != name or component.__name__ != name:
             app.config.from_object(component)
 
+    # Gather and import all models modules or packages of the
+    # registered components.
+
+    components.find('models', app, raw=True)
+
 
 @utils.memoize
 def _get_application_from_name(self, name):

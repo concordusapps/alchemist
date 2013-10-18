@@ -14,6 +14,9 @@ class Engine(object):
     def __dir__(self):
         return dir(self['default'])
 
+    def __repr__(self):
+        return repr(self['default'])
+
     @utils.memoize
     def __getitem__(self, name):
 
@@ -40,7 +43,7 @@ class Engine(object):
                 password=config.get('password', config.get('pass')),
                 host=config.get('hostname', config.get('host')),
                 port=config.get('port'),
-                database=config['name']))
+                database=config.get('name', config.get('database'))))
 
         return sa.create_engine(url, **options)
 

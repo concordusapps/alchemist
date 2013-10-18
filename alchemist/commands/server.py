@@ -4,7 +4,7 @@ from flask.ext import script
 
 class Server(script.Server):
 
-    name = 'runserver'
+    name = 'run'
 
     def __init__(self, *args, **kwargs):
 
