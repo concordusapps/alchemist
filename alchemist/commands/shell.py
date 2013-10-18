@@ -6,16 +6,18 @@ from collections import defaultdict
 import sys
 
 
+def _iter_context():
+    for component, registry in db.registry.items():
+        for name, model in registry.items():
+            if not name.startswith('_'):
+                yield name, model
+
 
 def _make_context():
-    """Create the namespace of items already pre-imported when using shell-plus
+    """Create the namespace of items already pre-imported when using shell
     """
-
     namespace = {'db': db, 'session': db.session}
-
-    for component, registry in db.registry.items():
-        namespace.update(registry)
-
+    namespace.update(_iter_context())
     return namespace
 
 
@@ -33,9 +35,8 @@ class Shell(script.Shell):
         text += colored('session = db.session\n', 'green')
 
         modules = defaultdict(set)
-        for component, registry in db.registry.items():
-            for name, model in registry.items():
-                modules[model.__module__].add(name)
+        for name, model in _iter_context():
+            modules[model.__module__].add(name)
 
         for module, name in modules.items():
             context = (module, ', '.join(name))
@@ -45,6 +46,8 @@ class Shell(script.Shell):
 
     @banner.setter
     def banner(self, value):
+        """Flask script attempts to set the banner to itself for some unknown
+        reason.  So just don't bother."""
         pass
 
     def __init__(self, *args, **kwargs):
