@@ -71,7 +71,7 @@ class Shell(script.Shell):
         if pipe:
             # User is attempting to pipe in script through stdin.
             text = sys.stdin.read()
-            exec(text, None, None) # _make_context(quiet=True))
+            exec(text, None, _make_context())
             return
 
         # Fallback to normal cycle.

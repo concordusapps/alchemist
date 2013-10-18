@@ -7,7 +7,6 @@ import sqlalchemy as sa
 import weakref
 import re
 import six
-from collections import defaultdict
 
 
 def _component_of(name):

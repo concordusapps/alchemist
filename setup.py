@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_packages
+from setuptools import setup
 from imp import load_source
 
 
@@ -46,7 +46,7 @@ setup(
 
         # ANSII Color formatting for output in terminal.
         # <https://pypi.python.org/pypi/termcolor>
-        # 'termcolor >= 1.1, < 1.2',
+        'termcolor >= 1.1, < 1.2',
 
         # Flask is a microframework for Python based on Werkzeug,
         # Jinja 2 and good intentions.

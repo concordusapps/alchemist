@@ -12,7 +12,7 @@ class Session(orm.Session):
         # Default the bind and query class.
 
         # TODO: Serisouly consider using autocommit.
-        # http://docs.sqlalchemy.org/en/rel_0_8/orm/session.html#autocommit-mode
+        #http://docs.sqlalchemy.org/en/rel_0_8/orm/session.html#autocommit-mode
 
         kwargs.setdefault('autocommit', False)
         kwargs.setdefault('autoflush', True)
