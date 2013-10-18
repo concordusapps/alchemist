@@ -3,7 +3,6 @@ from . import engine, query
 from flask import appcontext_tearing_down, g
 from sqlalchemy import orm
 from werkzeug import LocalProxy
-import six
 
 
 class Session(orm.Session):

@@ -3,8 +3,6 @@ from alchemist.test import settings
 from flask import Flask
 from os import path
 import os
-import pytest
-import sys
 import alchemist
 
 

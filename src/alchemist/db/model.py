@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-from alchemist import db, utils
+from alchemist import db
+from alchemist.conf import settings
 from alchemist.db.query import Query
 from sqlalchemy.ext.declarative import declared_attr, DeclarativeMeta
 import sqlalchemy as sa
 import weakref
+import six
 
 
 def _component_of(name):
@@ -20,13 +22,13 @@ def _component_of(name):
             return test
 
         # Remove the right-most segment.
-        package.pop()
+        segments.pop()
 
-    if not package and '.models' in name:
+    if not segments and '.models' in name:
         # No package was found to be registered; attempt to guess the
         # right package name; strip all occurrances of '.models' from the
         # pacakge name.
-        return name.replace('.models', '')
+        return _component_of(name.replace('.models', ''))
 
 
 #! Project-wide model metadata.
