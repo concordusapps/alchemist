@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from alchemist import db, utils
 from alchemist.db.query import Query
-from sqlalchemy.ext.declarative import declared_attr, declarative_base, DeclarativeMeta, base
+from sqlalchemy.ext.declarative import declared_attr, DeclarativeMeta
 import sqlalchemy as sa
 import weakref
 
@@ -90,7 +90,7 @@ class ModelBase(DeclarativeMeta):
         # declarative registry and metadata to share the global if so; else,
         # generate its own.
 
-        attrs['_component'] =  component = _component_of(attrs['__module__'])
+        attrs['_component'] = component = _component_of(attrs['__module__'])
         if component:
             attrs['_ModelBase__registry'] = _registry
             attrs['metadata'] = _metadata
