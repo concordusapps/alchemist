@@ -36,46 +36,6 @@ def _component_of(name):
 #! Global model metadata.
 _metadata = sa.MetaData()
 
-#! Global declarative class registry.
-_registry = weakref.WeakValueDictionary()
-
-
-class ComponentRegistry(weakref.WeakValueDictionary):
-    """
-    A local registry that is instantiated per-component. This keeps track
-    of model names using just the class name.
-    """
-
-    def __missing__(self, name):
-        return _registry[name]
-
-    def __getitem__(self, name):
-        try:
-            return super(ComponentRegistry, self).__getitem__(name)
-
-        except KeyError:
-            return self.__missing__(name)
-
-    def __contains__(self, name):
-        return (super(ComponentRegistry, self).__contains__(name)
-            or (name in _registry))
-
-    def __setitem__(self, name, value):
-
-        # Store the model in the global registry using shorthand with '__'.
-        # TODO: Use ':' when we can.
-        key = '%s__%s' % (_component_of(value.__module__), name)
-        _registry[key] = value
-
-        # TODO: When we can.
-        # Store the model in the global registry using the full path.
-        # key = '%s__%s' % (value.__module__, name)
-        # _registry[key] = value
-
-        # Store the model in the local registry.
-        super(ComponentRegistry, self).__setitem__(name, value)
-
-
 #! Componentized declarative class registries.
 _registry_map = {}
 
@@ -164,7 +124,7 @@ class ModelBase(DeclarativeMeta):
 
         if component:
             if component not in _registry_map:
-                _registry_map[component] = ComponentRegistry()
+                _registry_map[component] = weakref.WeakValueDictionary()
 
             attrs['_ModelBase__registry'] = _registry_map[component]
             attrs['metadata'] = _metadata
