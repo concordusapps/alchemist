@@ -15,4 +15,4 @@ class TestManager:
 
         manager = management.Manager(self.app)
 
-        assert 'runserver' in manager._commands
+        assert 'run' in manager._commands

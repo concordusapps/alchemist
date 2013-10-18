@@ -28,7 +28,7 @@ class TestServer:
                 sys.argv = _argv
 
     def test_default(self):
-        target = self._run(['runserver'])
+        target = self._run(['run'])
         target.assert_called_with(
             self.app, host='::1', port=8000, use_debugger=True,
             threaded=False, processes=1,
@@ -45,7 +45,7 @@ class TestServer:
         }
 
         with test.settings(self.app, **config):
-            target = self._run(['runserver'])
+            target = self._run(['run'])
             target.assert_called_with(
                 self.app, passthrough_errors=False,
                 host=config['SERVER_HOST'],
