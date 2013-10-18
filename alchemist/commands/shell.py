@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from flask.ext import script
 from alchemist import db
+from termcolor import colored
+from collections import defaultdict
 import sys
+
 
 
 def _make_context():
@@ -24,9 +27,29 @@ class Shell(script.Shell):
 
     name = 'shell'
 
+    @property
+    def banner(self):
+        text = colored('from alchemist import db\n', 'green')
+        text += colored('session = db.session\n', 'green')
+
+        modules = defaultdict(set)
+        for component, registry in db.registry.items():
+            for name, model in registry.items():
+                modules[model.__module__].add(name)
+
+        for module, name in modules.items():
+            text += colored('from %s import %s\n' % (module, ', '.join(name)), 'green')
+
+        return text
+
+    @banner.setter
+    def banner(self, value):
+        pass
+
     def __init__(self, *args, **kwargs):
         # # Default the context maker.
         kwargs.setdefault('make_context', _make_context)
+        kwargs.setdefault('banner')
 
         # Continue initialization.
         super(Shell, self).__init__(*args, **kwargs)
