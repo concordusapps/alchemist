@@ -2,6 +2,7 @@
 from ._engine import engine
 from ._session import Session, session
 from .query import Query
+from .model import Model
 
 
 __all__ = [
@@ -9,6 +10,7 @@ __all__ = [
     'Session',
     'session',
     'Query',
+    'Model',
 ]
 
 # TODO: Support these options perhaps -- look into them at least.

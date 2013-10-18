@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from alchemist import db
+from alchemist.db import session
 from alchemist.conf import settings
 from alchemist.db.query import Query
 from sqlalchemy.ext.declarative import declared_attr, DeclarativeMeta
@@ -32,7 +32,7 @@ def _component_of(name):
 
 
 #! Project-wide model metadata.
-_metadata = sa.Metadata()
+_metadata = sa.MetaData()
 
 
 #! Project-wide declarative class registry.
@@ -99,7 +99,7 @@ class ModelBase(DeclarativeMeta):
 
         else:
             attrs['_ModelBase__registry'] = weakref.WeakValueDictionary()
-            attrs['metadata'] = sa.Metadata()
+            attrs['metadata'] = sa.MetaData()
 
 
 class Model(six.with_metaclass(ModelBase)):
