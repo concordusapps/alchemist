@@ -6,7 +6,7 @@ from imp import load_source
 
 setup(
     name='alchemist',
-    version=load_source('', 'src/alchemist/_version.py').__version__,
+    version=load_source('', 'alchemist/_version.py').__version__,
     description='A server architecture built on top of a solid foundation '
                 'provided by flask, sqlalchemy, and various extensions.',
     classifiers=[
@@ -24,9 +24,11 @@ setup(
     author='Concordus Applications',
     author_email='support@concordusapps.com',
     url='http://github.com/concordusapps/alchemist',
-    # scripts=['bin/alchemist'],
-    package_dir={'alchemist': 'src/alchemist'},
-    packages=find_packages('src'),
+    packages=[
+        'alchemist',
+        'alchemist.commands',
+        'alchemist.db'
+    ],
     # entry_points={'pytest11': ['alchemist = alchemist.plugin']},
     dependency_links=[
         # wsgi_intercept

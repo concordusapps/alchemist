@@ -9,7 +9,7 @@ import alchemist
 class TestSettings:
 
     def test_project(self):
-        self.app = Flask('tests.a')
+        self.app = Flask('alchemist.tests.a')
         with settings(self.app):
             alchemist.configure(self.app)
 
@@ -26,8 +26,8 @@ class TestSettings:
             alchemist.configure(self.app)
 
     def test_component(self):
-        self.app = Flask('tests.a')
-        with settings(self.app, COMPONENTS=['tests.a.b']):
+        self.app = Flask('alchemist.tests.a')
+        with settings(self.app, COMPONENTS=['alchemist.tests.a.b']):
             alchemist.configure(self.app)
 
             assert self.app.config.get('B_SETTING', 1)
@@ -39,8 +39,9 @@ class TestSettings:
         it is listed in the COMPONENTS array.
         """
 
-        self.app = Flask('tests.a')
-        with settings(self.app, COMPONENTS=['tests.a.b', 'tests.a']):
+        self.app = Flask('alchemist.tests.a')
+        components = ['alchemist.tests.a.b', 'alchemist.tests.a']
+        with settings(self.app, COMPONENTS=components):
             alchemist.configure(self.app)
 
             assert self.app.config.get('B_SETTING', 1)
@@ -55,7 +56,7 @@ class TestSettings:
         filename = path.join(path.dirname(__file__), '../a/b/settings.py')
         os.environ['ALCHEMIST_SETTINGS_MODULE'] = filename
 
-        self.app = Flask('tests.a')
+        self.app = Flask('alchemist.tests.a')
         with settings(self.app):
             alchemist.configure(self.app)
 
@@ -73,7 +74,7 @@ class TestSettings:
         filename = path.join(path.dirname(__file__), '../a/b/settings.py')
         os.environ['TESTS_A_SETTINGS_MODULE'] = filename
 
-        self.app = Flask('tests.a')
+        self.app = Flask('alchemist.tests.a')
         with settings(self.app):
             alchemist.configure(self.app)
 
@@ -97,24 +98,24 @@ class TestApplication:
         self._clear_cache()
 
     def test_stack(self):
-        from tests.a.example import application
+        from .a.example import application
 
-        assert application.name == 'tests.a'
+        assert application.name == 'alchemist.tests.a'
 
     def test_env(self):
-        os.environ['ALCHEMIST_APPLICATION'] = 'tests.a'
+        os.environ['ALCHEMIST_APPLICATION'] = 'alchemist.tests.a'
 
-        from tests.a.b.example import application
+        from .a.b.example import application
 
-        assert application.name == 'tests.a'
+        assert application.name == 'alchemist.tests.a'
 
         del os.environ['ALCHEMIST_APPLICATION']
 
     def test_env_direct(self):
-        os.environ['ALCHEMIST_APPLICATION'] = 'tests.a.b'
+        os.environ['ALCHEMIST_APPLICATION'] = 'alchemist.tests.a.b'
 
         from alchemist.app import application
 
-        assert application.name == 'tests.a.b'
+        assert application.name == 'alchemist.tests.a.b'
 
         del os.environ['ALCHEMIST_APPLICATION']
