@@ -38,7 +38,8 @@ class Shell(script.Shell):
                 modules[model.__module__].add(name)
 
         for module, name in modules.items():
-            text += colored('from %s import %s\n' % (module, ', '.join(name)), 'green')
+            context = (module, ', '.join(name))
+            text += colored('from %s import %s\n' % context, 'green')
 
         return text
 
