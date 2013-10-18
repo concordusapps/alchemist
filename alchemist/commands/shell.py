@@ -1,6 +1,19 @@
 # -*- coding: utf-8 -*-
 from flask.ext import script
+from alchemist import db
 import sys
+
+
+def _make_context():
+    """Create the namespace of items already pre-imported when using shell-plus
+    """
+
+    namespace = {'db': db, 'session': db.session}
+
+    for component, registry in db.registry.items():
+        namespace.update(registry)
+
+    return namespace
 
 
 class Shell(script.Shell):
@@ -13,7 +26,7 @@ class Shell(script.Shell):
 
     def __init__(self, *args, **kwargs):
         # # Default the context maker.
-        # kwargs.setdefault('make_context', _make_context)
+        kwargs.setdefault('make_context', _make_context)
 
         # Continue initialization.
         super(Shell, self).__init__(*args, **kwargs)
