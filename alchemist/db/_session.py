@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, absolute_import, division
 from . import engine, query
 from flask import appcontext_tearing_down, g
 from sqlalchemy import orm

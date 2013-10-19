@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, absolute_import, division
 from alchemist import test
 import alchemist
 from flask import Flask
-from unittest import mock
 import sys
 import io
 import py
 from . import utils
+
+
+try:
+    from unittest import mock
+
+except ImportError:
+    import mock
 
 
 class CommandTest:

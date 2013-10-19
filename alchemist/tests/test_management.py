@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, absolute_import, division
 from alchemist import management
 from flask import Flask
 

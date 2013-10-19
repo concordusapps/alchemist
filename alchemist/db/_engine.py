@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, absolute_import, division
 from alchemist import utils, exceptions
 from alchemist.conf import settings
 import sqlalchemy as sa

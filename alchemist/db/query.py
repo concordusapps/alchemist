@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, absolute_import, division
 from sqlalchemy import orm
 from sqlalchemy.ext.declarative.api import DeclarativeMeta
 
@@ -18,4 +19,4 @@ class Query(orm.Query):
                 cls = entity.__query__
 
         # Continue as normal.
-        return super().__new__(cls)
+        return super(Query, cls).__new__(cls)

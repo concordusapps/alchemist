@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, absolute_import, division
 from . import utils
 from flask.ext import components
 from importlib import import_module

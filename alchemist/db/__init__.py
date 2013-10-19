@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, absolute_import, division
 from ._engine import engine
 from ._session import Session, session
 from .query import Query
@@ -16,8 +17,6 @@ __all__ = [
 ]
 
 # TODO: Support these options perhaps -- look into them at least.
-# app.config.setdefault('SQLALCHEMY_DATABASE_URI', 'sqlite://')
-# app.config.setdefault('SQLALCHEMY_BINDS', None)
 # app.config.setdefault('SQLALCHEMY_NATIVE_UNICODE', None)
 # app.config.setdefault('SQLALCHEMY_ECHO', False)
 # app.config.setdefault('SQLALCHEMY_RECORD_QUERIES', None)

@@ -2,6 +2,11 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 from imp import load_source
+import sys
+
+test_requirements = []
+if sys.version_info[0] < 3:
+    test_requirements += ['mock']
 
 
 setup(
@@ -99,5 +104,9 @@ setup(
         # making your integration with web services seamless.
         # <http://docs.python-requests.org/en/latest/>
         # 'requests'
-    ]
+    ],
+    tests_require=test_requirements,
+    extras_require={
+        'test': test_requirements
+    }
 )

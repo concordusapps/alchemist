@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, absolute_import, division
 from alchemist.test import settings
 import alchemist
 from flask import Flask

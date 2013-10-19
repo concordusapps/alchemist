@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, absolute_import, division
 from flask.ext import script
 from alchemist import db
 from termcolor import colored
