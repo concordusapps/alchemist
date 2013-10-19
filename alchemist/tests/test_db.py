@@ -6,6 +6,7 @@ from flask import Flask
 import contextlib
 from pytest import raises
 from . import utils
+from sqlalchemy.engine.result import ResultProxy
 
 
 class TestEngine:
@@ -78,7 +79,7 @@ class TestEngine:
             with contextlib.closing(db.engine.connect()) as connection:
 
                 result = connection.execute("BEGIN")
-                assert result.closed
+                assert isinstance(result, ResultProxy)
 
     def test_lookup(self):
         from alchemist import db
