@@ -168,3 +168,15 @@ class TestDatabase(CommandTest):
         target.assert_called()
         target.assert_called_with(
             echo=False, names=[], verbose=True, commit=True, offline=False)
+
+
+class TestSettings(CommandTest):
+
+    def test_init_default(self):
+        capture = py.io.StdCapture(out=True, in_=False)
+        target = self._run(['settings'], patch='alchemist.db.init')
+        out, err = capture.done()
+
+        text = out.read()
+
+        assert "'COMPONENTS':" in text
