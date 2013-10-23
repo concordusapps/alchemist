@@ -125,3 +125,46 @@ class TestShell(CommandTest):
             assert text == out.read()
 
             sys.stdin = stdin
+
+
+class TestDatabase(CommandTest):
+
+    def test_init_default(self):
+        cmd = ['db', 'init']
+        target = self._run(cmd, patch='alchemist.db.init')
+
+        target.assert_called()
+        target.assert_called_with(
+            echo=False, names=[], verbose=True, commit=True, offline=False)
+
+    def test_init_echo(self):
+        cmd = ['db', 'init', '--echo']
+        target = self._run(cmd, patch='alchemist.db.init')
+
+        target.assert_called()
+        target.assert_called_with(
+            echo=True, names=[], verbose=True, commit=True, offline=False)
+
+    def test_init_offline(self):
+        cmd = ['db', 'init', '--offline', '--echo']
+        target = self._run(cmd, patch='alchemist.db.init')
+
+        target.assert_called()
+        target.assert_called_with(
+            echo=True, names=[], verbose=True, commit=True, offline=True)
+
+    def test_clear_default(self):
+        cmd = ['db', 'clear']
+        target = self._run(cmd, patch='alchemist.db.clear')
+
+        target.assert_called()
+        target.assert_called_with(
+            echo=False, names=[], verbose=True, commit=True, offline=False)
+
+    def test_flush_default(self):
+        cmd = ['db', 'flush']
+        target = self._run(cmd, patch='alchemist.db.flush')
+
+        target.assert_called()
+        target.assert_called_with(
+            echo=False, names=[], verbose=True, commit=True, offline=False)

@@ -7,7 +7,7 @@ import sys
 
 
 def highlight(text):
-    if sys.stdout.isatty():
+    if sys.stdout.isatty():  # pragma: nocoverage
         return pygments.highlight(text, SqlLexer(), Terminal256Formatter())
 
     return text

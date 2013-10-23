@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import, division
-from alchemist.test import settings
 import alchemist
-from flask import Flask
 import contextlib
+import py
+from alchemist.test import settings
+from flask import Flask
 from pytest import raises
-from . import utils
 from sqlalchemy.engine.result import ResultProxy
+from sqlalchemy.exc import OperationalError
+from . import utils
 
 
 class TestEngine:
@@ -186,3 +188,307 @@ class TestQuery:
 
         assert isinstance(db.session.query(Entity), db.Query)
         assert isinstance(Entity.query, db.Query)
+
+
+class TestInitializeOperation:
+
+    def setup(self):
+        self.app = Flask('alchemist.tests.a')
+        self.context = self.app.app_context()
+        self.context.push()
+
+    def teardown(self):
+        from alchemist import db
+        db.clear()
+
+        self.context.pop()
+
+    def test_init(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        with raises(OperationalError):
+            assert Entity.query.all()
+
+        db.init()
+
+        assert Entity.query.all() == []
+
+    def test_init_component(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        with raises(OperationalError):
+            assert Entity.query.all()
+
+        db.init(names=['alchemist.tests.a'])
+
+        assert Entity.query.all() == []
+
+    def test_init_full_name(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        with raises(OperationalError):
+            assert Entity.query.all()
+
+        db.init(names=['alchemist.tests.a.models.Entity'])
+
+        assert Entity.query.all() == []
+
+    def test_init_short_name(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        with raises(OperationalError):
+            assert Entity.query.all()
+
+        db.init(names=['alchemist.tests.a:Entity'])
+
+        assert Entity.query.all() == []
+
+    def test_init_twice(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        with raises(OperationalError):
+            assert Entity.query.all()
+
+        db.init(names=['alchemist.tests.a:Entity'])
+
+        assert Entity.query.all() == []
+
+        db.init(names=['alchemist.tests.a:Entity'])
+
+        assert Entity.query.all() == []
+
+    def test_init_verbose(self):
+        from alchemist import db
+
+        capture = py.io.StdCapture(out=True, in_=False)
+        db.init(verbose=True)
+        out, err = capture.done()
+
+        text = err.read()
+
+        assert 'create' in text
+        assert 'alchemist_tests_a_entity' in text
+
+    def test_init_offline(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        with raises(OperationalError):
+            assert Entity.query.all()
+
+        db.init(offline=True)
+
+        with raises(OperationalError):
+            assert Entity.query.all()
+
+    def test_init_echo(self):
+        from alchemist import db
+
+        capture = py.io.StdCapture(out=True, in_=False)
+        db.init(echo=True)
+        out, err = capture.done()
+
+        text = out.read()
+
+        assert 'CREATE TABLE' in text
+        assert 'alchemist_tests_a_entity' in text
+
+
+class TestClearOperation:
+
+    def setup(self):
+        from alchemist import db
+
+        self.app = Flask('alchemist.tests.a')
+        self.context = self.app.app_context()
+        self.context.push()
+
+        db.init()
+
+    def teardown(self):
+        from alchemist import db
+
+        db.clear()
+
+        self.context.pop()
+
+    def test_clear(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        assert Entity.query.all() == []
+
+        db.clear()
+
+        with raises(OperationalError):
+            assert Entity.query.all()
+
+    def test_clear_name(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        assert Entity.query.all() == []
+
+        db.clear(names=['alchemist.tests.a'])
+
+        with raises(OperationalError):
+            assert Entity.query.all()
+
+    def test_clear_twice(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        assert Entity.query.all() == []
+
+        db.clear()
+
+        with raises(OperationalError):
+            assert Entity.query.all()
+
+        db.clear()
+
+        with raises(OperationalError):
+            assert Entity.query.all()
+
+    def test_clear_verbose(self):
+        from alchemist import db
+
+        capture = py.io.StdCapture(out=True, in_=False)
+        db.clear(verbose=True)
+        out, err = capture.done()
+
+        text = err.read()
+
+        assert 'drop' in text
+        assert 'alchemist_tests_a_entity' in text
+
+    def test_clear_offline(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        assert Entity.query.all() == []
+
+        db.clear(offline=True)
+
+        assert Entity.query.all() == []
+
+    def test_clear_echo(self):
+        from alchemist import db
+
+        capture = py.io.StdCapture(out=True, in_=False)
+        db.clear(echo=True)
+        out, err = capture.done()
+
+        text = out.read()
+
+        assert 'DROP TABLE' in text
+        assert 'alchemist_tests_a_entity' in text
+
+
+class TestFlushOperation:
+
+    def setup(self):
+        from alchemist import db
+
+        self.app = Flask('alchemist.tests.a')
+        self.context = self.app.app_context()
+        self.context.push()
+
+        db.init()
+
+        from .a.models import Entity
+
+        db.session.add(Entity())
+        db.session.commit()
+
+    def teardown(self):
+        from alchemist import db
+
+        db.clear()
+
+        self.context.pop()
+
+    def test_flush(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        assert len(Entity.query.all()) == 1
+
+        db.flush()
+
+        assert Entity.query.all() == []
+
+    def test_flush_non_existing(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        assert len(Entity.query.all()) == 1
+
+        db.clear()
+        db.flush()
+
+        with raises(OperationalError):
+            assert Entity.query.all()
+
+    def test_flush_name(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        assert len(Entity.query.all()) == 1
+
+        db.flush(names=['alchemist.tests.a'])
+
+        assert Entity.query.all() == []
+
+    def test_flush_twice(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        assert len(Entity.query.all()) == 1
+
+        db.flush()
+
+        assert Entity.query.all() == []
+
+        db.flush()
+
+        assert Entity.query.all() == []
+
+    def test_flush_verbose(self):
+        from alchemist import db
+
+        capture = py.io.StdCapture(out=True, in_=False)
+        db.flush(verbose=True)
+        out, err = capture.done()
+
+        text = err.read()
+
+        assert 'flush' in text
+        assert 'alchemist_tests_a_entity' in text
+
+    def test_flush_offline(self):
+        from alchemist import db
+        from .a.models import Entity
+
+        assert len(Entity.query.all()) == 1
+
+        db.flush(offline=True)
+
+        assert len(Entity.query.all()) == 1
+
+    def test_flush_echo(self):
+        from alchemist import db
+
+        capture = py.io.StdCapture(out=True, in_=False)
+        db.flush(echo=True)
+        out, err = capture.done()
+
+        text = out.read()
+
+        assert 'DELETE FROM' in text
+        assert 'alchemist_tests_a_entity' in text

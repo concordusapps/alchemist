@@ -190,7 +190,7 @@ def _included(table, names):
 
     # No names indicates that every table is included.
 
-    if names is None:
+    if not names:
         return True
 
     # Introspect the table and pull out the model and component from it.
