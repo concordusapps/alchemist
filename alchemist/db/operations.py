@@ -10,6 +10,7 @@ from termcolor import colored
 from contextlib import closing, contextmanager
 from sqlalchemy_utils import render_expression, render_statement
 from six import print_
+import alembic
 from alembic import autogenerate
 from alembic.util import rev_id
 from alembic.config import Config
@@ -289,9 +290,9 @@ def revision(message=None, auto=True):
         current_head = script.get_current_head()
         create_date = datetime.datetime.now()
         revpath = script._rev_path(revid, message, create_date)
-        alchemist_root = path.dirname(alchemist.__file__)
+        alembic_root = path.dirname(alembic.__file__)
         script._generate_template(
-            path.join(alchemist_root, 'templates', 'script.py.mako'),
+            path.join(alembic_root, 'templates', 'script.py.mako'),
             revpath,
             up_revision=str(revid),
             down_revision=current_head,
