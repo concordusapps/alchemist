@@ -5,8 +5,9 @@ from sqlalchemy import schema, create_engine
 from . import metadata, engine, registry, utils
 import sys
 import re
-from termcolor import cprint, colored
+from termcolor import colored
 from sqlalchemy_utils import render_expression, render_statement
+from six import print_
 
 
 def init(names=None, databases=None, echo=False, commit=True, offline=False,
@@ -28,11 +29,11 @@ def init(names=None, databases=None, echo=False, commit=True, offline=False,
     """
 
     if verbose:
-        print(colored(' *', 'white', attrs=['dark']),
-              colored('init', 'cyan'),
-              colored('default', 'white'),
-              colored(engine['default'].url, 'white', attrs=['dark']),
-              file=sys.stderr)
+        print_(colored(' *', 'white', attrs=['dark']),
+               colored('init', 'cyan'),
+               colored('default', 'white'),
+               colored(engine['default'].url, 'white', attrs=['dark']),
+               file=sys.stderr)
 
     # Offline preparation cannot commit to the database.
 
@@ -52,10 +53,10 @@ def init(names=None, databases=None, echo=False, commit=True, offline=False,
             continue
 
         if verbose:
-            print(colored(' -', 'white', attrs=['dark']),
-                  colored('create', 'cyan'),
-                  colored(table.name, 'white'),
-                  file=sys.stderr)
+            print_(colored(' -', 'white', attrs=['dark']),
+                   colored('create', 'cyan'),
+                   colored(table.name, 'white'),
+                   file=sys.stderr)
 
         if echo:
 
@@ -85,11 +86,11 @@ def clear(names=None, databases=None, echo=False, commit=True, offline=False,
     """
 
     if verbose:
-        print(colored(' *', 'white', attrs=['dark']),
-              colored('clear', 'cyan'),
-              colored('default', 'white'),
-              colored(engine['default'].url, 'white', attrs=['dark']),
-              file=sys.stderr)
+        print_(colored(' *', 'white', attrs=['dark']),
+               colored('clear', 'cyan'),
+               colored('default', 'white'),
+               colored(engine['default'].url, 'white', attrs=['dark']),
+               file=sys.stderr)
 
     # Offline preparation cannot commit to the database.
 
@@ -109,10 +110,10 @@ def clear(names=None, databases=None, echo=False, commit=True, offline=False,
             continue
 
         if verbose:
-            print(colored(' -', 'white', attrs=['dark']),
-                  colored('drop', 'cyan'),
-                  colored(table.name, 'white'),
-                  file=sys.stderr)
+            print_(colored(' -', 'white', attrs=['dark']),
+                   colored('drop', 'cyan'),
+                   colored(table.name, 'white'),
+                   file=sys.stderr)
 
         if echo:
 
@@ -141,11 +142,11 @@ def flush(names=None, databases=None, echo=False, commit=True, offline=False,
     """
 
     if verbose:
-        print(colored(' *', 'white', attrs=['dark']),
-              colored('flush', 'cyan'),
-              colored('default', 'white'),
-              colored(engine['default'].url, 'white', attrs=['dark']),
-              file=sys.stderr)
+        print_(colored(' *', 'white', attrs=['dark']),
+               colored('flush', 'cyan'),
+               colored('default', 'white'),
+               colored(engine['default'].url, 'white', attrs=['dark']),
+               file=sys.stderr)
 
     # Offline preparation cannot commit to the database.
 
@@ -165,10 +166,10 @@ def flush(names=None, databases=None, echo=False, commit=True, offline=False,
             continue
 
         if verbose:
-            print(colored(' -', 'white', attrs=['dark']),
-                  colored('flush', 'cyan'),
-                  colored(table.name, 'white'),
-                  file=sys.stderr)
+            print_(colored(' -', 'white', attrs=['dark']),
+                   colored('flush', 'cyan'),
+                   colored(table.name, 'white'),
+                   file=sys.stderr)
 
         statement = table.delete()
 
