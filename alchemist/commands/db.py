@@ -14,8 +14,8 @@ common_options = [
            help='Do not commit or finalize any operation.'),
     Option('--offline', action='store_true', required=False, default=False,
            help='Make no connection to the database server.'),
-    Option('--verbose', '-v', action='store_true', required=False,
-           default=False),
+    Option('--quiet', '-q', dest='verbose',
+           action='store_false', required=False, default=True),
 ]
 
 

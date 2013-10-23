@@ -41,11 +41,7 @@ def init(names=None, databases=None, echo=False, commit=True, offline=False,
 
     for table in metadata.sorted_tables:
 
-        # Introspect the table and determine if we are to process it.
-
-        model, component = table.class_, table.class_._component
-        model_name = '%s.%s' % (type(model).__module__, type(model).__name__)
-        if names and component not in names and model_name not in names:
+        if not _included(table, names):
             continue
 
         # Determine the target engine from the model.
@@ -102,11 +98,7 @@ def clear(names=None, databases=None, echo=False, commit=True, offline=False,
 
     for table in reversed(metadata.sorted_tables):
 
-        # Introspect the table and determine if we are to process it.
-
-        model, component = table.class_, table.class_._component
-        model_name = '%s.%s' % (type(model).__module__, type(model).__name__)
-        if names and component not in names and model_name not in names:
+        if not _included(table, names):
             continue
 
         # Determine the target engine from the model.
@@ -162,11 +154,7 @@ def flush(names=None, databases=None, echo=False, commit=True, offline=False,
 
     for table in reversed(metadata.sorted_tables):
 
-        # Introspect the table and determine if we are to process it.
-
-        model, component = table.class_, table.class_._component
-        model_name = '%s.%s' % (type(model).__module__, type(model).__name__)
-        if names and component not in names and model_name not in names:
+        if not _included(table, names):
             continue
 
         # Determine the target engine from the model.
@@ -194,3 +182,38 @@ def flush(names=None, databases=None, echo=False, commit=True, offline=False,
         if commit:
 
             target.execute(statement)
+
+
+def _included(table, names):
+    """Determines if the table is included by reference in the names.
+    """
+
+    # No names indicates that every table is included.
+
+    if names is None:
+        return True
+
+    # Introspect the table and pull out the model and component from it.
+
+    model, component = table.class_, table.class_._component
+
+    # Check for the component name.
+
+    if component in names:
+        return True
+
+    # Check for the full python name.
+
+    model_name = '%s.%s' % (model.__module__, model.__name__)
+
+    if model_name in names:
+        return True
+
+    # Check for the short name.
+
+    short_name = '%s:%s' % (component, model.__name__)
+
+    if short_name in names:
+        return True
+
+    return False
