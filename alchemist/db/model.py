@@ -133,9 +133,16 @@ class ModelBase(DeclarativeMeta):
             attrs['_ModelBase__registry'] = weakref.WeakValueDictionary()
             attrs['metadata'] = sa.MetaData()
 
-        # Continue instantiation.
-
         return super(ModelBase, cls).__new__(cls, name, bases, attrs)
+
+    def __init__(self, name, bases, attrs):
+        super(ModelBase, self).__init__(name, bases, attrs)
+
+        if _is_model(name, bases, attrs):
+
+            # Add a reference to the model on the table.
+
+            setattr(self.__table__, 'class_', weakref.proxy(self))
 
 
 class Model(six.with_metaclass(ModelBase)):

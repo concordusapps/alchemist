@@ -10,10 +10,10 @@ from . import utils
 
 
 try:
-    from unittest import mock
+    from unittest import mock  # pragma: nocoverage
 
-except ImportError:
-    import mock
+except ImportError:  # pragma: nocoverage
+    import mock  # pragma: nocoverage
 
 
 class CommandTest:

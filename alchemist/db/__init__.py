@@ -4,6 +4,7 @@ from ._engine import engine
 from ._session import Session, session
 from .query import Query
 from .model import Model, _metadata as metadata, _registry_map as registry
+from .operations import init, clear
 
 
 __all__ = [
@@ -13,7 +14,9 @@ __all__ = [
     'Query',
     'Model',
     'metadata',
-    'registry'
+    'registry',
+    'init',
+    'clear'
 ]
 
 # TODO: Support these options perhaps -- look into them at least.

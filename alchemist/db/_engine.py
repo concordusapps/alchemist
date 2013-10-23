@@ -38,13 +38,13 @@ class Engine(object):
         else:
             config = dict(map(lambda i: (i[0].lower(), i[1]), config.items()))
             options = config.get('options', {})
-            url = str(URL(
+            url = URL(
                 config['engine'],
                 username=config.get('username', config.get('user')),
                 password=config.get('password', config.get('pass')),
                 host=config.get('hostname', config.get('host')),
                 port=config.get('port'),
-                database=config.get('name', config.get('database'))))
+                database=config.get('name', config.get('database')))
 
         return sa.create_engine(url, **options)
 
