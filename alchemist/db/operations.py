@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import, division
-from alchemist.conf import settings
-from sqlalchemy import schema, create_engine
-from . import metadata, engine, registry, utils
+from . import metadata, engine, utils
 import sys
-import re
 from termcolor import colored
 from sqlalchemy_utils import render_expression, render_statement
 from six import print_
