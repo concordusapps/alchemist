@@ -53,6 +53,7 @@ setup(
         'flask-components >= 0.1',
         'sqlalchemy >= 0.8',
         'sqlalchemy-utils >= 0.16',
+        'alembic >= 0.6, < 0.7',
         'pytest >= 2.4',
         'pytest-pep8 >= 1.0',
         'pytest-cov >= 1.6',
