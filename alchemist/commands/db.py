@@ -5,11 +5,17 @@ from alchemist import db
 
 
 common_options = [
-    Option(dest='names', nargs='*'),
-    Option('--echo', action='store_true', required=False, default=False),
-    Option('--offline', action='store_true', required=False, default=False),
+    Option(dest='names', nargs='*',
+           help='The names of components or models to limit the scope to.'),
+    Option('--echo', action='store_true', required=False, default=False,
+           help='Print the SQL statements as they are processed to stdout.'),
     Option('--dry-run', action='store_false', dest='commit',
-           required=False, default=True),
+           required=False, default=True,
+           help='Do not commit or finalize any operation.'),
+    Option('--offline', action='store_true', required=False, default=False,
+           help='Make no connection to the database server.'),
+    Option('--verbose', '-v', action='store_true', required=False,
+           default=False),
 ]
 
 
@@ -39,3 +45,17 @@ class Clear(Command):
 
     def run(self, *args, **kwargs):
         db.clear(*args, **kwargs)
+
+
+class Flush(Command):
+    """Flush the database; remove all data.
+    """
+
+    name = 'flush'
+
+    namespace = 'db'
+
+    option_list = common_options
+
+    def run(self, *args, **kwargs):
+        db.flush(*args, **kwargs)
