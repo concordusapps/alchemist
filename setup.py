@@ -41,8 +41,8 @@ setup(
         # 'git+git://github.com/concordusapps/wsgi-intercept.git'
         # '#egg=wsgi_intercept-0.6.0',
 
-        'git+git://github.com/concordusapps/flask-script.git@edge'
-        '#egg=flask-script-edge',
+        'git+git://github.com/concordusapps/flask-script.git@edge#egg=flask-script-edge',
+        'https://launchpad.net/oursql/py3k/py3k-0.9.4/+download/oursql-0.9.4.tar.gz#egg=oursql-0.9.4'
     ],
     install_requires=[
         'colorama',
@@ -61,6 +61,7 @@ setup(
     ],
     tests_require=test_requirements,
     extras_require={
-        'test': test_requirements
+        'test': test_requirements,
+        'mysql': ['oursql >= 0.9.4']
     }
 )
