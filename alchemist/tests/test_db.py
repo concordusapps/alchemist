@@ -281,7 +281,9 @@ class TestInitializeOperation:
         with raises(OperationalError):
             assert Entity.query.all()
 
+        capture = py.io.StdCapture(out=True, in_=False)
         db.init(offline=True)
+        _, _ = capture.done()
 
         with raises(OperationalError):
             assert Entity.query.all()
@@ -373,7 +375,9 @@ class TestClearOperation:
 
         assert Entity.query.all() == []
 
+        capture = py.io.StdCapture(out=True, in_=False)
         db.clear(offline=True)
+        _, _ = capture.done()
 
         assert Entity.query.all() == []
 

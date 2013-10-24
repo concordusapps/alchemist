@@ -4,6 +4,7 @@ from setuptools import setup
 from imp import load_source
 import sys
 
+
 test_requirements = []
 if sys.version_info[0] < 3:
     test_requirements += ['mock']
@@ -43,6 +44,9 @@ setup(
 
         'git+git://github.com/concordusapps/flask-script.git@edge'
         '#egg=flask-script-edge',
+
+        'git+git://github.com/kvesteri/sqlalchemy-utils@master'
+        '#egg=sqlalchemy-utils-edge'
     ],
     install_requires=[
         'colorama',
@@ -52,7 +56,7 @@ setup(
         'flask-script == edge',
         'flask-components >= 0.1',
         'sqlalchemy >= 0.8',
-        'sqlalchemy-utils >= 0.16',
+        'sqlalchemy-utils == edge',
         'alembic >= 0.6, < 0.7',
         'pytest >= 2.4',
         'pytest-pep8 >= 1.0',
