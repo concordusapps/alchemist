@@ -10,9 +10,10 @@ from termcolor import colored
 from contextlib import closing, contextmanager
 from sqlalchemy_utils import render_expression, render_statement
 from six import print_
+from six.moves import cStringIO
 import alembic
 from alembic import autogenerate
-from alembic.util import rev_id
+from alembic.util import rev_id, obfuscate_url_pw
 from alembic.config import Config
 from alembic.environment import EnvironmentContext
 from alembic.script import ScriptDirectory, Script
@@ -37,10 +38,11 @@ def init(names=None, databases=None, echo=False, commit=True, offline=False,
     """
 
     if verbose:
+        url = obfuscate_url_pw(engine['default'].url)
         print_(colored(' *', 'white', attrs=['dark']),
                colored('init', 'cyan'),
                colored('default', 'white'),
-               colored(engine['default'].url, 'white', attrs=['dark']),
+               colored(url, 'white', attrs=['dark']),
                file=sys.stderr)
 
     # Offline preparation cannot commit to the database.
@@ -95,10 +97,11 @@ def clear(names=None, databases=None, echo=False, commit=True, offline=False,
     """
 
     if verbose:
+        url = obfuscate_url_pw(engine['default'].url)
         print_(colored(' *', 'white', attrs=['dark']),
                colored('clear', 'cyan'),
                colored('default', 'white'),
-               colored(engine['default'].url, 'white', attrs=['dark']),
+               colored(url, 'white', attrs=['dark']),
                file=sys.stderr)
 
     # Offline preparation cannot commit to the database.
@@ -152,10 +155,11 @@ def flush(names=None, databases=None, echo=False, commit=True, offline=False,
     """
 
     if verbose:
+        url = obfuscate_url_pw(engine['default'].url)
         print_(colored(' *', 'white', attrs=['dark']),
                colored('flush', 'cyan'),
                colored('default', 'white'),
-               colored(engine['default'].url, 'white', attrs=['dark']),
+               colored(url, 'white', attrs=['dark']),
                file=sys.stderr)
 
     # Offline preparation cannot commit to the database.
@@ -301,55 +305,7 @@ def revision(message=None, auto=True):
             **context)
 
 
-# def run_migrations_offline():
-#     """Run migrations in 'offline' mode.
-
-#     This configures the context with just a URL
-#     and not an Engine, though an Engine is acceptable
-#     here as well.  By skipping the Engine creation
-#     we don't even need a DBAPI to be available.
-
-#     Calls to context.execute() here emit the given string to the
-#     script output.
-
-#     """
-#     url = config.get_main_option("sqlalchemy.url")
-#     context.configure(url=url)
-
-#     with context.begin_transaction():
-#         context.run_migrations()
-
-# def run_migrations_online():
-#     """Run migrations in 'online' mode.
-
-#     In this scenario we need to create an Engine
-#     and associate a connection with the context.
-
-#     """
-#     engine = engine_from_config(
-#                 config.get_section(config.config_ini_section),
-#                 prefix='sqlalchemy.',
-#                 poolclass=pool.NullPool)
-
-#     connection = engine.connect()
-#     context.configure(
-#                 connection=connection,
-#                 target_metadata=target_metadata
-#                 )
-
-#     try:
-#         with context.begin_transaction():
-#             context.run_migrations()
-#     finally:
-#         connection.close()
-
-# if context.is_offline_mode():
-#     run_migrations_offline()
-# else:
-#     run_migrations_online()
-
-
-def upgrade(revision, echo=False, offline=False):
+def upgrade(revision, offline=False):
     """Upgrade the database to a later version.
     """
 
@@ -374,28 +330,64 @@ def upgrade(revision, echo=False, offline=False):
             env.run_migrations()
 
 
-# def upgrade(config, revision, sql=False, tag=None):
-#     """Upgrade to a later version.
-#     """
+def status(verbose=False):
+    """Display the current revision for each database.
+    """
+
+    revisions = {}
+
+    if verbose:
+        url = obfuscate_url_pw(engine['default'].url)
+        print_(colored(' *', 'white', attrs=['dark']),
+               colored('status', 'cyan'),
+               colored('default', 'white'),
+               colored(url, 'white', attrs=['dark']),
+               file=sys.stderr)
+
+    def process(rev, context):
+        rev = env.script.get_revision(rev)
+        revisions['default'] = rev
+
+        if verbose:
+
+
+            print_(colored(' -', 'white', attrs=['dark']),
+                   colored('revision', 'cyan'),
+                   colored(rev.revision, 'white'),
+                   colored('head' if rev.is_head else '', 'red', attrs=['bold']),
+                   file=sys.stderr)
+
+        return []
+
+    with _alembic_context(fn=process) as env:
+        with env.begin_transaction():
+            env.run_migrations()
+
+    return revisions
+
+
+# def current(config, head_only=False):
+#     """Display the current revision for each database."""
 
 #     script = ScriptDirectory.from_config(config)
+#     def display_version(rev, context):
+#         rev = script.get_revision(rev)
 
-#     starting_rev = None
-#     if ":" in revision:
-#         if not sql:
-#             raise ValueError("Range revision not allowed")
-#         starting_rev, revision = revision.split(':', 2)
+#         if head_only:
+#             config.print_stdout("%s%s" % (
+#                 rev.revision if rev else None,
+#                 " (head)" if rev and rev.is_head else ""))
 
-#     def upgrade(rev, context):
-#         return script._upgrade_revs(revision, rev)
+#         else:
+#             config.print_stdout("Current revision for %s: %s",
+#                                 util.obfuscate_url_pw(
+#                                     context.connection.engine.url),
+#                                 rev)
+#         return []
 
 #     with EnvironmentContext(
 #         config,
 #         script,
-#         fn=upgrade,
-#         as_sql=sql,
-#         starting_rev=starting_rev,
-#         destination_rev=revision,
-#         tag=tag
+#         fn=display_version
 #     ):
 #         script.run_env()
