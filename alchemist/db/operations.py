@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import, division
-import alchemist
 from . import metadata, engine, utils
 import datetime
-import os
 from os import path
 import sys
 from termcolor import colored
-from contextlib import closing, contextmanager
+from contextlib import contextmanager
 from sqlalchemy_utils import render_expression, render_statement
 from six import print_
-from six.moves import cStringIO
 import alembic
 from alembic import autogenerate
 from alembic.util import rev_id, obfuscate_url_pw
 from alembic.config import Config
 from alembic.environment import EnvironmentContext
-from alembic.script import ScriptDirectory, Script
+from alembic.script import ScriptDirectory
 
 
 def init(names=None, databases=None, echo=False, commit=True, offline=False,
@@ -349,12 +346,11 @@ def status(verbose=False):
         revisions['default'] = rev
 
         if verbose:
-
-
+            monkier = 'head' if rev.is_head else ''
             print_(colored(' -', 'white', attrs=['dark']),
                    colored('revision', 'cyan'),
                    colored(rev.revision, 'white'),
-                   colored('head' if rev.is_head else '', 'red', attrs=['bold']),
+                   colored(monkier, 'red', attrs=['bold']),
                    file=sys.stderr)
 
         return []

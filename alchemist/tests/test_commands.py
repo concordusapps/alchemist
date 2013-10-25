@@ -172,9 +172,9 @@ class TestDatabase(CommandTest):
 
 class TestSettings(CommandTest):
 
-    def test_init_default(self):
+    def test_settings_default(self):
         capture = py.io.StdCapture(out=True, in_=False)
-        target = self._run(['settings'], patch='alchemist.db.init')
+        self._run(['settings'], patch='alchemist.db.init')
         out, err = capture.done()
 
         text = out.read()
