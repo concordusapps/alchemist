@@ -9,6 +9,7 @@ def settings(app, **kwargs):
 
     Allows override with the keyword arguments.
     """
+
     # Save the current application config to restore.
     _config = dict(app.config)
 

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from setuptools import setup
 from imp import load_source
@@ -45,8 +45,8 @@ setup(
         'git+git://github.com/concordusapps/flask-script.git@edge'
         '#egg=flask-script-edge',
 
-        'git+git://github.com/kvesteri/sqlalchemy-utils@master'
-        '#egg=sqlalchemy-utils-edge'
+        'https://launchpad.net/oursql/py3k/py3k-0.9.4/+download/'
+        'oursql-0.9.4.tar.gz#egg=oursql-0.9.4',
     ],
     install_requires=[
         'colorama',
@@ -56,7 +56,7 @@ setup(
         'flask-script == edge',
         'flask-components >= 0.1',
         'sqlalchemy >= 0.8',
-        'sqlalchemy-utils == edge',
+        'sqlalchemy-utils >= 0.16',
         'alembic >= 0.6, < 0.7',
         'pytest >= 2.4',
         'pytest-pep8 >= 1.0',
@@ -65,6 +65,7 @@ setup(
     ],
     tests_require=test_requirements,
     extras_require={
-        'test': test_requirements
+        'test': test_requirements,
+        'mysql': ['oursql >= 0.9.4']
     }
 )
