@@ -1,1 +1,1 @@
-from alchemist.app import application
+from alchemist.app import application  # noqa
