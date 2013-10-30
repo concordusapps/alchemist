@@ -197,6 +197,8 @@ class TestInitializeOperation:
         self.context = self.app.app_context()
         self.context.push()
 
+        alchemist.configure(self.app)
+
     def teardown(self):
         from alchemist import db
         db.clear()

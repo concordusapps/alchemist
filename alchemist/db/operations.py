@@ -6,7 +6,7 @@ from os import path
 import sys
 from termcolor import colored
 from contextlib import contextmanager
-from sqlalchemy_utils import render_expression, render_statement, mock_engine
+from sqlalchemy_utils import create_mock_engine
 from six import print_
 import alembic
 from alembic import autogenerate
@@ -16,13 +16,13 @@ from alembic.environment import EnvironmentContext
 from alembic.script import ScriptDirectory
 
 
-def op(expression, tables=metadata.sorted_tables, test=None,
+def op(expression, tables=None, test=None, primary=None, secondary=None,
        names=None, databases=None, echo=False, commit=True,
        offline=False, verbose=False):
 
     if verbose:
         url = obfuscate_url_pw(engine['default'].url)
-        print_command(' *', verb, 'default', url)
+        print_command(' *', primary, 'default', url)
 
     # Offline preparation cannot commit to the database and should always
     # echo output.
@@ -31,7 +31,7 @@ def op(expression, tables=metadata.sorted_tables, test=None,
         commit = False
         echo = True
 
-    for table in tables:
+    for table in (tables or metadata.sorted_tables):
 
         if not is_table_included(table, names):
             continue
@@ -44,12 +44,12 @@ def op(expression, tables=metadata.sorted_tables, test=None,
             continue
 
         if verbose:
-            print_command(' -', 'create', table.name)
+            print_command(' -', secondary, table.name)
 
         if echo:
             stream = utils.HighlightStream(sys.stdout)
-            with mock_engine('target', stream):
-                expression(engine, table)
+            target = create_mock_engine(target, stream)
+            expression(target, table)
 
         if commit:
             expression(target, table)
@@ -63,8 +63,8 @@ def init(**kwargs):
       - Ensure all tables exist in the database.
     """
     expression = lambda target, table: table.create(target)
-    test = lambda target, table: not table.exists(target)
-    op(expression, test=test, **kwargs)
+    test = lambda target, table: table.exists(target)
+    op(expression, test=test, primary='init', secondary='create', **kwargs)
 
 
 def clear(**kwargs):
@@ -74,8 +74,9 @@ def clear(**kwargs):
     are removed from a database, the database itself.
     """
     expression = lambda target, table: table.drop(target)
-    test = lambda target, table: table.exists(target)
-    op(expression, reversed(metadata.sorted_tables), test=test, **kwargs)
+    test = lambda target, table: not table.exists(target)
+    op(expression, reversed(metadata.sorted_tables), test=test,
+       primary='clear', secondary='drop', **kwargs)
 
 
 def flush(**kwargs):
@@ -84,9 +85,9 @@ def flush(**kwargs):
     This can be highly destructive as it destroys all data.
     """
     expression = lambda target, table: target.execute(table.delete())
-    test = lambda target, table: table.exists(target)
-    op(expression, reversed(metadata.sorted_tables), test=test **kwargs)
-
+    test = lambda target, table: not table.exists(target)
+    op(expression, reversed(metadata.sorted_tables), test=test,
+       primary='flush', secondary='flush', **kwargs)
 
 
 def is_table_included(table, names):
@@ -124,7 +125,7 @@ def is_table_included(table, names):
     return False
 
 
-def print_command(indicator, name, target, extra):
+def print_command(indicator, name, target, extra=''):
     print_(colored(indicator, 'white', attrs=['dark']),
            colored(name, 'cyan'),
            colored(target, 'white'),

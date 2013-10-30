@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from setuptools import setup
+from setuptools import setup, find_packages
 from imp import load_source
 import sys
 
@@ -31,11 +31,7 @@ setup(
     author='Concordus Applications',
     author_email='support@concordusapps.com',
     url='http://github.com/concordusapps/alchemist',
-    packages=[
-        'alchemist',
-        'alchemist.commands',
-        'alchemist.db'
-    ],
+    packages=find_packages('.'),
     # entry_points={'pytest11': ['alchemist = alchemist.plugin']},
     dependency_links=[
         # wsgi_intercept
