@@ -38,6 +38,15 @@ def configure(self, app):
         if component.__package__ != name or component.__name__ != name:
             app.config.from_object(component)
 
+    # Resolve deferred configuration.
+
+    from alchemist.conf import defer
+
+    with app.app_context():
+        for name, value in app.config.items():
+            if isinstance(value, defer):
+                app.config[name] = value.resolve()
+
     # Gather and import all models modules or packages of the
     # registered components.
 

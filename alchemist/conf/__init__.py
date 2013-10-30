@@ -2,9 +2,11 @@
 from __future__ import unicode_literals, absolute_import, division
 from alchemist import app
 import collections
+import six
 
 __all__ = [
-    'settings'
+    'settings',
+    'defer'
 ]
 
 
@@ -53,3 +55,17 @@ class Settings(collections.Mapping):
 
 # Instantiate lazy-bound settings object.
 settings = Settings()
+
+
+class defer(object):
+    """Acts a proxy for a configuration setting.
+    """
+
+    def __init__(self, expression):
+        self._expression = expression
+
+    def resolve(self):
+        from . import settings
+        locals().update(settings)
+        six.exec_('value = (%s)' % self._expression, locals(), globals())
+        return value
