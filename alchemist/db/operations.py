@@ -6,7 +6,7 @@ from os import path
 import sys
 from termcolor import colored
 from contextlib import contextmanager
-from sqlalchemy_utils import render_expression, render_statement
+from sqlalchemy_utils import render_expression, render_statement, mock_engine
 from six import print_
 import alembic
 from alembic import autogenerate
@@ -16,66 +16,120 @@ from alembic.environment import EnvironmentContext
 from alembic.script import ScriptDirectory
 
 
-
-def flush(names=None, databases=None, echo=False, commit=True, offline=False,
-          verbose=False):
-    """Flush the specified names from the specified databases.
-
-    This can be highly destructive as it destroys all data.
-
-    @param[in] commit
-        When False changes are not actually applied.
-
-    @param[in] echo
-        When True SQL statements are logged to stdout.
-
-    @param[in] offline
-        When True make no connection attempts to the database.
-    """
+def op(expression, tables=metadata.sorted_tables, test=None,
+       names=None, databases=None, echo=False, commit=True,
+       offline=False, verbose=False):
 
     if verbose:
         url = obfuscate_url_pw(engine['default'].url)
-        print_(colored(' *', 'white', attrs=['dark']),
-               colored('flush', 'cyan'),
-               colored('default', 'white'),
-               colored(url, 'white', attrs=['dark']),
-               file=sys.stderr)
+        print_command(' *', verb, 'default', url)
 
-    # Offline preparation cannot commit to the database.
+    # Offline preparation cannot commit to the database and should always
+    # echo output.
 
     if offline:
         commit = False
+        echo = True
 
-    for table in reversed(metadata.sorted_tables):
+    for table in tables:
 
-        if not _included(table, names):
+        if not is_table_included(table, names):
             continue
 
         # Determine the target engine from the model.
 
         target = engine['default']
 
-        if not offline and not table.exists(target):
+        if not offline and test(target, table):
             continue
 
         if verbose:
-            print_(colored(' -', 'white', attrs=['dark']),
-                   colored('flush', 'cyan'),
-                   colored(table.name, 'white'),
-                   file=sys.stderr)
-
-        statement = table.delete()
+            print_command(' -', 'create', table.name)
 
         if echo:
-
             stream = utils.HighlightStream(sys.stdout)
-            text = render_statement(statement, target)
-
-            stream.write(text)
+            with mock_engine('target', stream):
+                expression(engine, table)
 
         if commit:
+            expression(target, table)
 
-            target.execute(statement)
+
+def init(**kwargs):
+    """Initialize the specified names in the specified databases.
+
+    The general process is as follows:
+      - Ensure the database in question exists
+      - Ensure all tables exist in the database.
+    """
+    expression = lambda target, table: table.create(target)
+    test = lambda target, table: not table.exists(target)
+    op(expression, test=test, **kwargs)
+
+
+def clear(**kwargs):
+    """Clear the specified names from the specified databases.
+
+    This can be highly destructive as it destroys tables and when all names
+    are removed from a database, the database itself.
+    """
+    expression = lambda target, table: table.drop(target)
+    test = lambda target, table: table.exists(target)
+    op(expression, reversed(metadata.sorted_tables), test=test, **kwargs)
+
+
+def flush(**kwargs):
+    """Flush the specified names from the specified databases.
+
+    This can be highly destructive as it destroys all data.
+    """
+    expression = lambda target, table: target.execute(table.delete())
+    test = lambda target, table: table.exists(target)
+    op(expression, reversed(metadata.sorted_tables), test=test **kwargs)
+
+
+
+def is_table_included(table, names):
+    """Determines if the table is included by reference in the names.
+    """
+
+    # No names indicates that every table is included.
+
+    if not names:
+        return True
+
+    # Introspect the table and pull out the model and component from it.
+
+    model, component = table.class_, table.class_._component
+
+    # Check for the component name.
+
+    if component in names:
+        return True
+
+    # Check for the full python name.
+
+    model_name = '%s.%s' % (model.__module__, model.__name__)
+
+    if model_name in names:
+        return True
+
+    # Check for the short name.
+
+    short_name = '%s:%s' % (component, model.__name__)
+
+    if short_name in names:
+        return True
+
+    return False
+
+
+def print_command(indicator, name, target, extra):
+    print_(colored(indicator, 'white', attrs=['dark']),
+           colored(name, 'cyan'),
+           colored(target, 'white'),
+           colored(extra, 'white', attrs=['dark']),
+           file=sys.stderr)
 
 
 @contextmanager
