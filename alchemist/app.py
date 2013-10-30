@@ -11,7 +11,10 @@ import os
 def configure(self, app):
 
     # Gather configuration from the following places:
-    #  1. <package>.settings
+    #  1. alchemist.conf.default_settings
+    app.config.from_object('alchemist.conf.default_settings')
+
+    #  2. <package>.settings
 
     try:
         app.config.from_object('%s.settings' % app.name)
@@ -19,11 +22,11 @@ def configure(self, app):
     except ImportError:
         pass
 
-    #  2. $ALCHEMIST_SETTINGS_MODULE
+    #  3. $ALCHEMIST_SETTINGS_MODULE
 
     app.config.from_envvar('ALCHEMIST_SETTINGS_MODULE', silent=True)
 
-    #  3. $<package>_SETTINGS_MODULE
+    #  4. $<package>_SETTINGS_MODULE
 
     var = '%s_SETTINGS_MODULE' % app.name.replace('.', '_').upper()
     app.config.from_envvar(var, silent=True)

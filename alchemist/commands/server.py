@@ -25,11 +25,11 @@ class Server(script.Server):
         # Collect default server configuration from the application config.
         config = app.config
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
-        kwargs.setdefault('host', config.get('SERVER_HOST', '::1'))
-        kwargs.setdefault('port', config.get('SERVER_PORT', 8000))
-        kwargs.setdefault('use_debugger', config.get('SERVER_DEBUG', True))
-        kwargs.setdefault('use_reloader', config.get('SERVER_RELOAD', True))
-        kwargs.setdefault('threaded', config.get('SERVER_THREADED', False))
-        kwargs.setdefault('processes', config.get('SERVER_PROCESSES', 1))
+        kwargs.setdefault('host', config.get('SERVER_HOST'))
+        kwargs.setdefault('port', config.get('SERVER_PORT'))
+        kwargs.setdefault('use_debugger', config.get('SERVER_DEBUG'))
+        kwargs.setdefault('use_reloader', config.get('SERVER_RELOAD'))
+        kwargs.setdefault('threaded', config.get('SERVER_THREADED'))
+        kwargs.setdefault('processes', config.get('SERVER_PROCESSES'))
 
         super(Server, self).handle(app, **kwargs)

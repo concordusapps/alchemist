@@ -22,6 +22,8 @@ class CommandTest:
         self.app = Flask('alchemist')
         self.app.config['COMPONENTS'] = ['alchemist']
 
+        alchemist.configure(self.app)
+
     def _run(self, command, patch=None):
         from alchemist import management
 
