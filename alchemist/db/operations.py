@@ -48,8 +48,8 @@ def op(expression, tables=None, test=None, primary=None, secondary=None,
 
         if echo:
             stream = utils.HighlightStream(sys.stdout)
-            target = create_mock_engine(target, stream)
-            expression(target, table)
+            mock = create_mock_engine(target, stream)
+            expression(mock, table)
 
         if commit:
             expression(target, table)
