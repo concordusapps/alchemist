@@ -15,7 +15,6 @@ from sqlalchemy.engine import url as sqla_url
 from sqlalchemy.sql import select
 from six import print_
 from collections import OrderedDict
-from alchemist import app
 from alchemist.conf import settings
 import alembic
 from alembic import autogenerate, migration
@@ -234,7 +233,7 @@ class MigrationContext(migration.MigrationContext):
             return self._start_from_rev
         else:
             if self._start_from_rev:
-                raise util.CommandError(
+                raise RuntimeError(
                     "Can't specify current_rev to context "
                     "when using a database connection")
             self._version.create(self.connection, checkfirst=True)
@@ -275,7 +274,7 @@ def revision(component, message=None, auto=True, verbose=False):
                 raise RuntimeError("Target component is not up to date.")
 
             autogenerate._produce_migration_diffs(
-                env._migration_context, context, [])
+                env._migration_context, context, set([]))
 
         # Generate the revision.
         revid = rev_id()
@@ -369,7 +368,7 @@ def status(names=None, verbose=False):
                 try:
                     env.run_migrations()
 
-                except FileNotFoundError as ex:
+                except FileNotFoundError:
                     revisions[component] = None
 
     for name, revision in revisions.items():
