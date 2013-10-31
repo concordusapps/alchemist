@@ -1,19 +1,25 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import, division
-from . import metadata, engine, utils
+from . import metadata, engine, utils, components
 import datetime
+from importlib import import_module
+import sqlalchemy as sa
+import os
 from os import path
 import sys
+from hashlib import md5
 from termcolor import colored
-from contextlib import closing
+from contextlib import closing, contextmanager
 from sqlalchemy_utils import create_mock_engine
+from sqlalchemy.engine import url as sqla_url
+from sqlalchemy.sql import select
 from six import print_
 from collections import OrderedDict
 from alchemist import app
 from alchemist.conf import settings
 import alembic
-from alembic import autogenerate
-from alembic.util import rev_id, obfuscate_url_pw
+from alembic import autogenerate, migration
+from alembic.util import rev_id, obfuscate_url_pw, template_to_file
 from alembic.config import Config
 from alembic.environment import EnvironmentContext
 from alembic.script import ScriptDirectory
@@ -131,113 +137,220 @@ def print_command(indicator, name, target='', extra=''):
            file=sys.stderr)
 
 
-class Alembic(object):
+@contextmanager
+def alembic_env(component, offline=False, init=False, **kwargs):
 
-    def __init__(self, component, offline=False, **kwargs):
-        # Store configuration.
-        self.component = component
-        self.offline = offline
+    # Retrieve the component metadata, if any.
+    md = components[component] if component in components else None
 
-        # Build the configuration object.
-        self.config = Config()
-        self.config.set_main_option('script_location', '%s:' % component)
-        self.config.set_main_option('url', str(engine['default'].url))
-        self.config.set_main_option('revision_environment', 'true')
+    # Find and create the script directory if neccessary.
+    location = path.dirname(import_module(component).__file__)
+    versions = path.join(location, 'versions')
+    if init and not path.exists(versions):
+        os.makedirs(versions)
 
-        # Construct the script directory object from the configuration.
-        self.script = ScriptDirectory.from_config(self.config)
+    # Build the configuration object.
+    config = Config()
+    config.set_main_option('script_location', location)
+    config.set_main_option('url', str(engine['default'].url))
+    config.set_main_option('revision_environment', 'true')
 
-        # Construct the environment context.
-        template_args = {'config': self.config}
-        self.env = EnvironmentContext(
-            self.config, self.script, as_sql=not offline,
-            template_args=template_args, **kwargs)
+    # Construct the script directory object from the configuration.
+    script = ScriptDirectory.from_config(config)
 
-    def __enter__(self):
-        options = {
-            'url': str(engine['default'].url),
-            'dialect_name': engine['default'].dialect.name,
-            'target_metadata': metadata}
+    # Construct the environment context.
+    template_args = {'config': config}
+    env = EnvironmentContext(
+        config, script, as_sql=offline,
+        template_args=template_args, **kwargs)
 
-        if not self.offline:
-            with self.env:
-                self.env.configure(**options)
-                return self
+    def patch(env):
+        # Monkey patch the migration context.
+        env._migration_context = MigrationContext.configure(
+            component,
+            connection=env._migration_context.connection,
+            url=options['url'],
+            dialect_name=options['dialect_name'],
+            opts=env.context_opts)
 
+    # Prepare options for the environment.
+    options = {
+        'url': str(engine['default'].url),
+        'dialect_name': engine['default'].dialect.name,
+        'target_metadata': md}
+
+    if offline:
+        with env:
+            env.configure(**options)
+            patch(env)
+            yield env
+
+    else:
+        connection = engine['default'].connect()
+        with closing(connection):
+            with env:
+                env.configure(connection=connection, **options)
+                patch(env)
+                yield env
+
+
+class MigrationContext(migration.MigrationContext):
+
+    def __init__(self, component, *args, **kwargs):
+        self.__component = component.encode('utf8')
+        super(MigrationContext, self).__init__(*args, **kwargs)
+        self._version = sa.Table(
+            'alchemist_versions', sa.MetaData(),
+            sa.Column('component_id', sa.String(32), nullable=False),
+            sa.Column('version_num', sa.String(32), nullable=False),
+            schema=self._version.schema)
+
+    @classmethod
+    def configure(cls, component, connection=None, url=None, dialect_name=None,
+                  opts=None):
+        if connection:
+            dialect = connection.dialect
+        elif url:
+            url = sqla_url.make_url(url)
+            dialect = url.get_dialect()()
+        elif dialect_name:
+            url = sqla_url.make_url("%s://" % dialect_name)
+            dialect = url.get_dialect()()
         else:
-            connection = engine['default'].connect()
-            with closing(connection):
-                with self.env:
-                    self.env.configure(connection=connection, **options)
-                    return self
+            raise Exception("Connection, url, or dialect_name is required.")
 
-    def __exit__(self, *args):
-        pass
+        return cls(component, dialect, connection, opts)
+
+    def get_current_revision(self):
+        """Return the current revision, usually that which is present
+        in the ``alembic_version`` table in the database.
+
+        If this :class:`.MigrationContext` was configured in "offline"
+        mode, that is with ``as_sql=True``, the ``starting_rev``
+        parameter is returned instead, if any.
+
+        """
+        if self.as_sql:
+            return self._start_from_rev
+        else:
+            if self._start_from_rev:
+                raise util.CommandError(
+                    "Can't specify current_rev to context "
+                    "when using a database connection")
+            self._version.create(self.connection, checkfirst=True)
+        component_id = md5(self.__component).hexdigest()
+        q = self._version.c.component_id == component_id
+        stmnt = select([self._version.c.version_num]).where(q)
+        return self.connection.scalar(stmnt)
+
+    def _update_current_rev(self, old, new):
+        cid = md5(self.__component).hexdigest()
+        if old == new:
+            return
+        if new is None:
+            self.impl._exec(self._version.delete())
+        elif old is None:
+            self.impl._exec(self._version.insert().
+                        values(component_id=sa.literal_column("'%s'" % cid),
+                               version_num=sa.literal_column("'%s'" % new))
+                    )
+        else:
+            self.impl._exec(self._version.update().
+                        values(component_id=sa.literal_column("'%s'" % cid),
+                               version_num=sa.literal_column("'%s'" % new))
+                    )
 
 
-# def revision(message=None, auto=True):
-#     """Generate a new database revision.
-#     """
+def revision(component, message=None, auto=True, verbose=False):
+    """Generate a new database revision for a component.
+    """
 
-#     with _alembic_context(offline=False) as env:
-#         context = {}
-#         script = env.script
+    with alembic_env(component, offline=False, init=True) as env:
+        context = {}
+        script = env.script
 
-#         if auto:
-#             cur = env._migration_context.get_current_revision()
-#             if script.get_revision(cur) is not script.get_revision("head"):
-#                 raise RuntimeError("Target database is not up to date.")
+        if auto:
+            cur = env._migration_context.get_current_revision()
+            if script.get_revision(cur) is not script.get_revision("head"):
+                raise RuntimeError("Target component is not up to date.")
 
-#             autogenerate._produce_migration_diffs(
-#                 env._migration_context, context, [])
+            autogenerate._produce_migration_diffs(
+                env._migration_context, context, [])
 
-#         # Generate the revision.
-#         revid = rev_id()
-#         current_head = script.get_current_head()
-#         create_date = datetime.datetime.now()
-#         revpath = script._rev_path(revid, message, create_date)
-#         alembic_root = path.dirname(alembic.__file__)
-#         script._generate_template(
-#             path.join(alembic_root, 'templates', 'script.py.mako'),
-#             revpath,
-#             up_revision=str(revid),
-#             down_revision=current_head,
-#             create_date=create_date,
-#             message=message if message is not None else ("No message"),
-#             **context)
+        # Generate the revision.
+        revid = rev_id()
+        current_head = script.get_current_head()
+        create_date = datetime.datetime.now()
+        revpath = script._rev_path(revid, message, create_date)
+        alembic_root = path.dirname(alembic.__file__)
+        source = path.join(alembic_root, 'templates/generic/script.py.mako')
+        template_to_file(
+            source, revpath,
+            up_revision=str(revid),
+            down_revision=current_head,
+            create_date=create_date,
+            message=message if message is not None else ("No message"),
+            **context)
 
 
-# def upgrade(revision, offline=False):
-#     """Upgrade the database to a later version.
-#     """
+def upgrade(component, revision, offline=False, verbose=False):
+    """Upgrade the component to a later version.
+    """
 
-#     starting_rev = None
-#     if ':' in revision:
-#         if not offline:
-#             raise ValueError(
-#                 'Range revision not allowed during offline operation.')
+    starting_rev = None
+    if ':' in revision:
+        if not offline:
+            raise ValueError(
+                'Range revision not allowed during online operation.')
 
-#         starting_rev, revision = revision.split(':', 2)
+        starting_rev, revision = revision.split(':', 2)
 
-#     def process(rev, context):
-#         return env.script._upgrade_revs(revision, rev)
+    def process(rev, context):
+        return env.script._upgrade_revs(revision, rev)
 
-#     with _alembic_context(
-#             offline=offline,
-#             starting_rev=starting_rev,
-#             fn=process,
-#             destination_rev=revision) as env:
+    with alembic_env(
+            component,
+            offline=offline,
+            starting_rev=starting_rev,
+            fn=process,
+            destination_rev=revision) as env:
 
-#         with env.begin_transaction():
-#             env.run_migrations()
+        with env.begin_transaction():
+            env.run_migrations()
+
+
+def downgrade(component, revision, offline=False, verbose=False):
+    """Downgrade the component to a later version.
+    """
+
+    starting_rev = None
+    if ':' in revision:
+        if not offline:
+            raise ValueError(
+                'Range revision not allowed during online operation.')
+
+        starting_rev, revision = revision.split(':', 2)
+
+    elif offline:
+        raise ValueError("downgrade with --offline requires <fromrev>:<torev>")
+
+    def process(rev, context):
+        return env.script._downgrade_revs(revision, rev)
+
+    with alembic_env(
+            component,
+            offline=offline,
+            starting_rev=starting_rev,
+            fn=process,
+            destination_rev=revision) as env:
+
+        with env.begin_transaction():
+            env.run_migrations()
 
 
 def status(names=None, verbose=False):
     """Display the current revision for each component.
     """
-
-    if verbose:
-        print_command(' *', 'status')
 
     revisions = OrderedDict()
     components = settings.get('COMPONENTS', [])
@@ -247,46 +360,41 @@ def status(names=None, verbose=False):
             continue
 
         def process(rev, context):
-            rev = alembic.env.script.get_revision(rev)
-            revisions[component] = rev
+            rev = env.script.get_revision(rev)
+            revisions[component] = rev or 'base'
             return []
 
-        with Alembic(component, fn=process, offline=False) as alembic:
-            with alembic.env.begin_transaction():
+        with alembic_env(component, fn=process, offline=False) as env:
+            with env.begin_transaction():
                 try:
-                    alembic.env.run_migrations()
+                    env.run_migrations()
 
-                except FileNotFoundError:
+                except FileNotFoundError as ex:
                     revisions[component] = None
 
     for name, revision in revisions.items():
-        print_command(' -', 'revision', name, revision or 'unversioned')
+        print_command(' *', 'status', name, revision or 'unversioned')
 
     return revisions
 
 
-# def current(config, head_only=False):
-#     """Display the current revision for each database."""
+def history(component, rev_range=None):
+    """List changeset scripts in chronological order.
+    """
 
-#     script = ScriptDirectory.from_config(config)
-#     def display_version(rev, context):
-#         rev = script.get_revision(rev)
+    if rev_range is not None:
+        if ":" not in rev_range:
+            raise util.CommandError(
+                    "History range requires [start]:[end], "
+                    "[start]:, or :[end]")
+        base, head = rev_range.strip().split(":")
+    else:
+        base = head = None
 
-#         if head_only:
-#             config.print_stdout("%s%s" % (
-#                 rev.revision if rev else None,
-#                 " (head)" if rev and rev.is_head else ""))
+    with alembic_env(component, offline=False) as env:
 
-#         else:
-#             config.print_stdout("Current revision for %s: %s",
-#                                 util.obfuscate_url_pw(
-#                                     context.connection.engine.url),
-#                                 rev)
-#         return []
-
-#     with EnvironmentContext(
-#         config,
-#         script,
-#         fn=display_version
-#     ):
-#         script.run_env()
+        for sc in env.script.walk_revisions(
+                base=base or 'base', head=head or 'head'):
+            if sc.is_head:
+                env.config.print_stdout("")
+            env.config.print_stdout(sc.log_entry)

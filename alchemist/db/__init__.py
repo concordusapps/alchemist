@@ -3,8 +3,10 @@ from __future__ import unicode_literals, absolute_import, division
 from ._engine import engine
 from ._session import Session, session
 from .query import Query
-from .model import Model, _metadata as metadata, _registry_map as registry
-from .operations import init, clear, flush, status
+from .model import (Model, _metadata as metadata, _registry_map as registry,
+                    _metadata_map as components)
+from .operations import (init, clear, flush, status, revision,
+                         upgrade, downgrade, history)
 
 
 __all__ = [
@@ -14,11 +16,16 @@ __all__ = [
     'Query',
     'Model',
     'metadata',
+    'components',
     'registry',
     'init',
     'clear',
     'flush',
-    'status'
+    'status',
+    'revision',
+    'upgrade',
+    'downgrade',
+    'history',
 ]
 
 # TODO: Support these options perhaps -- look into them at least.
