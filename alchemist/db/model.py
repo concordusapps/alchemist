@@ -150,13 +150,14 @@ class ModelBase(DeclarativeMeta):
 
             # Add ourself to the componetized metadata.
 
-            if self._component not in _metadata_map:
-                _metadata_map[self._component] = sa.MetaData()
+            if self._component:
+                if self._component not in _metadata_map:
+                    _metadata_map[self._component] = sa.MetaData()
 
-            _metadata_map[self._component]._add_table(
-                table.name,
-                _metadata.tables[table.name].schema or _metadata.schema,
-                table)
+                _metadata_map[self._component]._add_table(
+                    table.name,
+                    _metadata.tables[table.name].schema or _metadata.schema,
+                    table)
 
 
 class Model(six.with_metaclass(ModelBase)):
