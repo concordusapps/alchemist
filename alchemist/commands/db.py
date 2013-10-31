@@ -59,3 +59,20 @@ class Flush(Command):
 
     def run(self, *args, **kwargs):
         db.flush(*args, **kwargs)
+
+
+class Status(Command):
+    """List the current revision of each database.
+    """
+
+    name = 'status'
+
+    namespace = 'db'
+
+    option_list = [
+        Option('--quiet', '-q', dest='verbose',
+               action='store_false', required=False, default=True),
+    ]
+
+    def run(self, *args, **kwargs):
+        db.status(*args, **kwargs)

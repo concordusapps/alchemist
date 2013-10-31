@@ -4,7 +4,7 @@ from ._engine import engine
 from ._session import Session, session
 from .query import Query
 from .model import Model, _metadata as metadata, _registry_map as registry
-from .operations import init, clear, flush
+from .operations import init, clear, flush, status
 
 
 __all__ = [
@@ -17,7 +17,8 @@ __all__ = [
     'registry',
     'init',
     'clear',
-    'flush'
+    'flush',
+    'status'
 ]
 
 # TODO: Support these options perhaps -- look into them at least.

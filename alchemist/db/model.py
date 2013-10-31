@@ -36,6 +36,9 @@ def _component_of(name):
 #! Global model metadata.
 _metadata = sa.MetaData()
 
+#! Componentized model metadata.
+_metadata_map = {}
+
 #! Componentized declarative class registries.
 _registry_map = {}
 
@@ -142,7 +145,18 @@ class ModelBase(DeclarativeMeta):
 
             # Add a reference to the model on the table.
 
-            setattr(self.__table__, 'class_', weakref.proxy(self))
+            table = self.__table__
+            setattr(table, 'class_', weakref.proxy(self))
+
+            # Add ourself to the componetized metadata.
+
+            if self._component not in _metadata_map:
+                _metadata_map[self._component] = sa.MetaData()
+
+            _metadata_map[self._component]._add_table(
+                table.name,
+                _metadata.tables[table.name].schema or _metadata.schema,
+                table)
 
 
 class Model(six.with_metaclass(ModelBase)):

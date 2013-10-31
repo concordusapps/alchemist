@@ -5,9 +5,12 @@ import datetime
 from os import path
 import sys
 from termcolor import colored
-from contextlib import contextmanager
+from contextlib import closing
 from sqlalchemy_utils import create_mock_engine
 from six import print_
+from collections import OrderedDict
+from alchemist import app
+from alchemist.conf import settings
 import alembic
 from alembic import autogenerate
 from alembic.util import rev_id, obfuscate_url_pw
@@ -120,7 +123,7 @@ def is_table_included(table, names):
     return False
 
 
-def print_command(indicator, name, target, extra=''):
+def print_command(indicator, name, target='', extra=''):
     print_(colored(indicator, 'white', attrs=['dark']),
            colored(name, 'cyan'),
            colored(target, 'white'),
@@ -128,133 +131,136 @@ def print_command(indicator, name, target, extra=''):
            file=sys.stderr)
 
 
-@contextmanager
-def _alembic_context(offline=False, **kwargs):
-    from alchemist.app import application
+class Alembic(object):
 
-    # Build the alembic configuration.
-    config = Config()
-    config.set_main_option('script_location', application.name)
-    config.set_main_option('url', str(engine['default'].url))
-    config.set_main_option('revision_environment', 'true')
+    def __init__(self, component, offline=False, **kwargs):
+        # Store configuration.
+        self.component = component
+        self.offline = offline
 
-    # Construct a script directory object.
-    script = ScriptDirectory.from_config(config)
+        # Build the configuration object.
+        self.config = Config()
+        self.config.set_main_option('script_location', '%s:' % component)
+        self.config.set_main_option('url', str(engine['default'].url))
+        self.config.set_main_option('revision_environment', 'true')
 
-    try:
-        # Construct an environment context.
-        template_args = {'config': config}
-        env = EnvironmentContext(
-            config, script, as_sql=offline, template_args=template_args,
-            **kwargs)
+        # Construct the script directory object from the configuration.
+        self.script = ScriptDirectory.from_config(self.config)
 
-        with env:
+        # Construct the environment context.
+        template_args = {'config': self.config}
+        self.env = EnvironmentContext(
+            self.config, self.script, as_sql=not offline,
+            template_args=template_args, **kwargs)
 
-            # Configure the environment.
-            connection = engine['default'].connect() if not offline else None
-            dialect_name = engine['default'].dialect.name
-            env.configure(
-                connection=connection,
-                url=str(engine['default'].url),
-                dialect_name=dialect_name,
-                target_metadata=metadata)
+    def __enter__(self):
+        options = {
+            'url': str(engine['default'].url),
+            'dialect_name': engine['default'].dialect.name,
+            'target_metadata': metadata}
 
-            # Release control.
-            yield env
+        if not self.offline:
+            with self.env:
+                self.env.configure(**options)
+                return self
 
-    finally:
-        if not offline:
-            connection.close()
+        else:
+            connection = engine['default'].connect()
+            with closing(connection):
+                with self.env:
+                    self.env.configure(connection=connection, **options)
+                    return self
+
+    def __exit__(self, *args):
+        pass
 
 
-def revision(message=None, auto=True):
-    """Generate a new database revision.
+# def revision(message=None, auto=True):
+#     """Generate a new database revision.
+#     """
+
+#     with _alembic_context(offline=False) as env:
+#         context = {}
+#         script = env.script
+
+#         if auto:
+#             cur = env._migration_context.get_current_revision()
+#             if script.get_revision(cur) is not script.get_revision("head"):
+#                 raise RuntimeError("Target database is not up to date.")
+
+#             autogenerate._produce_migration_diffs(
+#                 env._migration_context, context, [])
+
+#         # Generate the revision.
+#         revid = rev_id()
+#         current_head = script.get_current_head()
+#         create_date = datetime.datetime.now()
+#         revpath = script._rev_path(revid, message, create_date)
+#         alembic_root = path.dirname(alembic.__file__)
+#         script._generate_template(
+#             path.join(alembic_root, 'templates', 'script.py.mako'),
+#             revpath,
+#             up_revision=str(revid),
+#             down_revision=current_head,
+#             create_date=create_date,
+#             message=message if message is not None else ("No message"),
+#             **context)
+
+
+# def upgrade(revision, offline=False):
+#     """Upgrade the database to a later version.
+#     """
+
+#     starting_rev = None
+#     if ':' in revision:
+#         if not offline:
+#             raise ValueError(
+#                 'Range revision not allowed during offline operation.')
+
+#         starting_rev, revision = revision.split(':', 2)
+
+#     def process(rev, context):
+#         return env.script._upgrade_revs(revision, rev)
+
+#     with _alembic_context(
+#             offline=offline,
+#             starting_rev=starting_rev,
+#             fn=process,
+#             destination_rev=revision) as env:
+
+#         with env.begin_transaction():
+#             env.run_migrations()
+
+
+def status(names=None, verbose=False):
+    """Display the current revision for each component.
     """
-
-    with _alembic_context(offline=False) as env:
-        context = {}
-        script = env.script
-
-        if auto:
-            cur = env._migration_context.get_current_revision()
-            if script.get_revision(cur) is not script.get_revision("head"):
-                raise RuntimeError("Target database is not up to date.")
-
-            autogenerate._produce_migration_diffs(
-                env._migration_context, context, [])
-
-        # Generate the revision.
-        revid = rev_id()
-        current_head = script.get_current_head()
-        create_date = datetime.datetime.now()
-        revpath = script._rev_path(revid, message, create_date)
-        alembic_root = path.dirname(alembic.__file__)
-        script._generate_template(
-            path.join(alembic_root, 'templates', 'script.py.mako'),
-            revpath,
-            up_revision=str(revid),
-            down_revision=current_head,
-            create_date=create_date,
-            message=message if message is not None else ("No message"),
-            **context)
-
-
-def upgrade(revision, offline=False):
-    """Upgrade the database to a later version.
-    """
-
-    starting_rev = None
-    if ':' in revision:
-        if not offline:
-            raise ValueError(
-                'Range revision not allowed during offline operation.')
-
-        starting_rev, revision = revision.split(':', 2)
-
-    def process(rev, context):
-        return env.script._upgrade_revs(revision, rev)
-
-    with _alembic_context(
-            offline=offline,
-            starting_rev=starting_rev,
-            fn=process,
-            destination_rev=revision) as env:
-
-        with env.begin_transaction():
-            env.run_migrations()
-
-
-def status(verbose=False):
-    """Display the current revision for each database.
-    """
-
-    revisions = {}
 
     if verbose:
-        url = obfuscate_url_pw(engine['default'].url)
-        print_(colored(' *', 'white', attrs=['dark']),
-               colored('status', 'cyan'),
-               colored('default', 'white'),
-               colored(url, 'white', attrs=['dark']),
-               file=sys.stderr)
+        print_command(' *', 'status')
 
-    def process(rev, context):
-        rev = env.script.get_revision(rev)
-        revisions['default'] = rev
+    revisions = OrderedDict()
+    components = settings.get('COMPONENTS', [])
+    for component in components:
 
-        if verbose:
-            monkier = 'head' if rev.is_head else ''
-            print_(colored(' -', 'white', attrs=['dark']),
-                   colored('revision', 'cyan'),
-                   colored(rev.revision, 'white'),
-                   colored(monkier, 'red', attrs=['bold']),
-                   file=sys.stderr)
+        if names and component not in names:
+            continue
 
-        return []
+        def process(rev, context):
+            rev = alembic.env.script.get_revision(rev)
+            revisions[component] = rev
+            return []
 
-    with _alembic_context(fn=process) as env:
-        with env.begin_transaction():
-            env.run_migrations()
+        with Alembic(component, fn=process, offline=False) as alembic:
+            with alembic.env.begin_transaction():
+                try:
+                    alembic.env.run_migrations()
+
+                except FileNotFoundError:
+                    revisions[component] = None
+
+    for name, revision in revisions.items():
+        print_command(' -', 'revision', name, revision or 'unversioned')
 
     return revisions
 
