@@ -5,7 +5,12 @@ from imp import load_source
 import sys
 
 
-test_requirements = []
+test_requirements = [
+    'pytest >= 2.4',
+    'pytest-pep8 >= 1.0',
+    'pytest-cov >= 1.6'
+]
+
 if sys.version_info[0] < 3:
     test_requirements += ['mock']
 
@@ -55,14 +60,10 @@ setup(
         'sqlalchemy >= 0.8',
         'sqlalchemy-utils >= 0.16',
         'alembic >= 0.6, < 0.7',
-        'pytest >= 2.4',
-        'pytest-pep8 >= 1.0',
-        'pytest-cov >= 1.6',
         'pygments'
-    ],
+    ] + test_requirements,
     tests_require=test_requirements,
     extras_require={
-        'test': test_requirements,
         'mysql': ['oursql >= 0.9.4']
     }
 )
