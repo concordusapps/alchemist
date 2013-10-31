@@ -141,7 +141,8 @@ class ModelBase(DeclarativeMeta):
     def __init__(self, name, bases, attrs):
         super(ModelBase, self).__init__(name, bases, attrs)
 
-        if _is_model(name, bases, attrs):
+        abstract = attrs.get('__abstract__', False)
+        if _is_model(name, bases, attrs) and not abstract:
 
             # Add a reference to the model on the table.
 

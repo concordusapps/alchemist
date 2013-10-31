@@ -15,5 +15,6 @@ class Manager(script.Manager):
         # Discover commands using the flask-components utility.
         for component in components.find('commands', app):
             for command in component.values():
-                if issubclass(command, (script.Command, script.Manager)):
+                if (command and isinstance(command, type) and
+                        issubclass(command, (script.Command, script.Manager))):
                     self.add_command(command)
