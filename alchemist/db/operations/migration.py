@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import, division
-from .. import metadata, engine, utils, components
+from .. import engine, components
 import datetime
 from importlib import import_module
 import sqlalchemy as sa
@@ -10,7 +10,6 @@ import sys
 from hashlib import md5
 from termcolor import colored
 from contextlib import closing, contextmanager
-from sqlalchemy_utils import create_mock_engine
 from sqlalchemy.engine import url as sqla_url
 from sqlalchemy.sql import select
 from six import print_
@@ -18,7 +17,7 @@ from collections import OrderedDict
 from alchemist.conf import settings
 import alembic
 from alembic import autogenerate, migration
-from alembic.util import rev_id, obfuscate_url_pw, template_to_file
+from alembic.util import rev_id, template_to_file
 from alembic.config import Config
 from alembic.environment import EnvironmentContext
 from alembic.script import ScriptDirectory
