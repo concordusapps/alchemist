@@ -63,7 +63,7 @@ class Flush(Command):
 
 
 class Shell(Command):
-    """Runs the command-line client for the specified database.
+    """Runs the CLI for the specified database.
     """
 
     name = 'shell'
