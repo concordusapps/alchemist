@@ -11,6 +11,13 @@ from sqlalchemy.exc import OperationalError
 from . import utils
 
 
+try:   # pragma: nocoverage
+    from unittest import mock
+
+except ImportError:  # pragma: nocoverage
+    import mock
+
+
 class TestEngine:
 
     @staticmethod
@@ -483,7 +490,9 @@ class TestFlushOperation:
 
         assert len(Entity.query.all()) == 1
 
+        capture = py.io.StdCapture(out=True, in_=False)
         db.flush(offline=True)
+        _, _ = capture.done()
 
         assert len(Entity.query.all()) == 1
 
@@ -498,3 +507,61 @@ class TestFlushOperation:
 
         assert 'DELETE FROM' in text
         assert 'alchemist_tests_a_entity' in text
+
+
+class TestShellOperation:
+
+    @staticmethod
+    def _clear_cache():
+        from alchemist.db._engine import Engine
+        Engine.__getitem__._cache.clear()
+
+    def setup(self):
+        self._clear_cache()
+        self.app = Flask('alchemist.tests.a')
+        self.context = self.app.app_context()
+        self.context.push()
+
+    def teardown(self):
+        self.context.pop()
+        self._clear_cache()
+
+    def test_shell_sqlite3(self):
+        from alchemist import db
+
+        with settings(self.app, DATABASES={'default': 'sqlite:///:memory:'}):
+
+            target = mock.MagicMock()
+            with mock.patch('os.execvp', target):
+                db.shell()
+
+            target.assert_called_with('sqlite3', ['sqlite3', ':memory:'])
+
+    def test_shell_mysql(self):
+        from alchemist import db
+
+        uri = 'mysql+oursql://user:pass@host:55/name'
+        with settings(self.app, DATABASES={'default': uri}):
+
+            target = mock.MagicMock()
+            with mock.patch('os.execvp', target):
+                db.shell()
+
+            target.assert_called_with('mysql', [
+                'mysql', '--user=user', '--password=pass',
+                '--host=host', '--port=55', 'name'])
+
+    def test_shell_mysql_socket(self):
+        from alchemist import db
+
+        uri = ('mysql+oursql://user:pass@localhost/name?'
+               'unix_socket=/some/file/over/there.socket')
+        with settings(self.app, DATABASES={'default': uri}):
+
+            target = mock.MagicMock()
+            with mock.patch('os.execvp', target):
+                db.shell()
+
+            target.assert_called_with('mysql', [
+                'mysql', '--user=user', '--password=pass',
+                '--socket=/some/file/over/there.socket', 'name'])

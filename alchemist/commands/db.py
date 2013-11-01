@@ -62,6 +62,23 @@ class Flush(Command):
         db.flush(*args, **kwargs)
 
 
+class Shell(Command):
+    """Runs the command-line client for the specified database.
+    """
+
+    name = 'shell'
+
+    namespace = 'db'
+
+    option_list = [
+        Option(dest='database', nargs='?', default='default',
+               help='The database to drop into the shell for.'),
+    ]
+
+    def run(self, *args, **kwargs):
+        db.shell(*args, **kwargs)
+
+
 class Status(Command):
     """List the current revision of each database.
     """

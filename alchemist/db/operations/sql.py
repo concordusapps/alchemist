@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import, division
-from .. import metadata, engine, utils
-import sys
-from termcolor import colored
-from sqlalchemy_utils import create_mock_engine
-from six import print_
+from ... import utils
+from .. import metadata, engine
+from .utils import HighlightStream
 from alembic.util import obfuscate_url_pw
+from sqlalchemy_utils import create_mock_engine
+import sys
 
 
 def op(expression, tables=None, test=None, primary=None, secondary=None,
@@ -14,7 +14,7 @@ def op(expression, tables=None, test=None, primary=None, secondary=None,
 
     if verbose:
         url = obfuscate_url_pw(engine['default'].url)
-        print_command(' *', primary, 'default', url)
+        utils.print_('*', primary, 'default', url)
 
     # Offline preparation cannot commit to the database and should always
     # echo output.
@@ -36,10 +36,10 @@ def op(expression, tables=None, test=None, primary=None, secondary=None,
             continue
 
         if verbose:
-            print_command(' -', secondary, table.name)
+            utils.print_('-', secondary, table.name)
 
         if echo:
-            stream = utils.HighlightStream(sys.stdout)
+            stream = HighlightStream(sys.stdout)
             mock = create_mock_engine(target, stream)
             expression(mock, table)
 
@@ -84,6 +84,12 @@ def flush(**kwargs):
 
 def is_table_included(table, names):
     """Determines if the table is included by reference in the names.
+
+    A table can be named by its component or its model (using the short-name
+    or a full python path).
+
+    eg. 'package.models.SomeModel' or 'package:SomeModel' or 'package'
+        would all include 'SomeModel'.
     """
 
     # No names indicates that every table is included.
@@ -99,22 +105,12 @@ def is_table_included(table, names):
 
     # Check for the full python name.
     model_name = '%s.%s' % (model.__module__, model.__name__)
-
     if model_name in names:
         return True
 
     # Check for the short name.
     short_name = '%s:%s' % (component, model.__name__)
-
     if short_name in names:
         return True
 
     return False
-
-
-def print_command(indicator, name, target='', extra=''):
-    print_(colored(indicator, 'white', attrs=['dark']),
-           colored(name, 'cyan'),
-           colored(target, 'white'),
-           colored(extra, 'white', attrs=['dark']),
-           file=sys.stderr)

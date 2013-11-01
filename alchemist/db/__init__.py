@@ -4,8 +4,8 @@ from ._engine import engine
 from ._session import Session, session
 from .query import Query
 from .model import (Model, _metadata as metadata, _registry_map as registry,
-                    _metadata_map as components)
-from .operations import (init, clear, flush, status, revision,
+                    _metadata_map as component_metadata)
+from .operations import (init, clear, flush, shell, status, revision,
                          upgrade, downgrade, history)
 
 
@@ -21,6 +21,7 @@ __all__ = [
     'init',
     'clear',
     'flush',
+    'shell',
     'status',
     'revision',
     'upgrade',

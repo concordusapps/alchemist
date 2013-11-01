@@ -9,11 +9,11 @@ import py
 from . import utils
 
 
-try:
-    from unittest import mock  # pragma: nocoverage
+try:   # pragma: nocoverage
+    from unittest import mock
 
 except ImportError:  # pragma: nocoverage
-    import mock  # pragma: nocoverage
+    import mock
 
 
 class CommandTest:

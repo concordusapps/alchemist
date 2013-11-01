@@ -2,7 +2,9 @@
 from __future__ import unicode_literals, absolute_import, division
 import types
 import sys
+import six
 import functools
+from termcolor import colored
 
 
 def make_module_class(name):
@@ -34,3 +36,12 @@ def memoize(obj):
         return cache[args]
 
     return memoizer
+
+
+def print_(indicator, name, target='', extra=''):
+    six.print_(
+        colored(' ' + indicator, 'white', attrs=['dark']),
+        colored(name, 'cyan'),
+        colored(target, 'white'),
+        colored(extra, 'white', attrs=['dark']),
+        file=sys.stderr)

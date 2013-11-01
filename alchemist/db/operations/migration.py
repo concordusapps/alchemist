@@ -1,44 +1,37 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import, division
-from .. import engine, components
-import datetime
-from importlib import import_module
-import sqlalchemy as sa
-import os
-from os import path
-import sys
-from hashlib import md5
-from termcolor import colored
-from contextlib import closing, contextmanager
-from sqlalchemy.engine import url as sqla_url
-from sqlalchemy.sql import select
-from six import print_
-from collections import OrderedDict
+from .. import engine, component_metadata
 from alchemist.conf import settings
-import alembic
 from alembic import autogenerate, migration
-from alembic.util import rev_id, template_to_file
 from alembic.config import Config
 from alembic.environment import EnvironmentContext
 from alembic.script import ScriptDirectory
+from alembic.util import rev_id, template_to_file
+from collections import OrderedDict
+from contextlib import closing, contextmanager
+from hashlib import md5
+from importlib import import_module
+from os import path
+from six import print_
+from sqlalchemy.engine import url as sqla_url
+from sqlalchemy.sql import select
+from termcolor import colored
+import alembic
+import datetime
+import os
+import sqlalchemy as sa
+import sys
 
-
-def print_command(indicator, name, target='', extra=''):
-    print_(colored(indicator, 'white', attrs=['dark']),
-           colored(name, 'cyan'),
-           colored(target, 'white'),
-           colored(extra, 'white', attrs=['dark']),
-           file=sys.stderr)
 
 
 @contextmanager
-def alembic_env(component, offline=False, init=False, **kwargs):
+def alembic_env(name, offline=False, init=False, **kwargs):
 
     # Retrieve the component metadata, if any.
-    md = components[component] if component in components else None
+    md = component_metadata[name] if name in component_metadata else None
 
     # Find and create the script directory if neccessary.
-    location = path.dirname(import_module(component).__file__)
+    location = path.dirname(import_module(name).__file__)
     versions = path.join(location, 'versions')
     if init and not path.exists(versions):
         os.makedirs(versions)
@@ -61,7 +54,7 @@ def alembic_env(component, offline=False, init=False, **kwargs):
     def patch(env):
         # Monkey patch the migration context.
         env._migration_context = MigrationContext.configure(
-            component,
+            name,
             connection=env._migration_context.connection,
             url=options['url'],
             dialect_name=options['dialect_name'],
