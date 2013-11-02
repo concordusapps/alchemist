@@ -66,6 +66,7 @@ class defer(object):
 
     def resolve(self):
         from . import settings
+        value = None
         locals().update(settings)
         six.exec_('value = (%s)' % self._expression, locals(), globals())
         return value
