@@ -37,7 +37,6 @@ setup(
     author_email='support@concordusapps.com',
     url='http://github.com/concordusapps/alchemist',
     packages=find_packages('.'),
-    entry_points={'pytest11': ['alchemist = alchemist.plugin']},
     dependency_links=[
         'git+git://github.com/concordusapps/wsgi-intercept.git'
         '#egg=wsgi_intercept-0.6.0',

@@ -5,11 +5,13 @@ from .shell import Shell
 from .settings import Settings
 from .load import Load
 from .db import (Initialize, Clear, Flush, Shell as DBShell)
+from .test import Test
 
 __all__ = [
     'Server',
     'Shell',
     'Initialize', 'Clear', 'Flush', 'DBShell',
     'Settings',
-    'Load'
+    'Load',
+    'Test'
 ]
