@@ -122,7 +122,6 @@ class TestApplication:
         del os.environ['ALCHEMIST_APPLICATION']
 
 
-
 class TestTestingDetection:
 
     def setup(self):

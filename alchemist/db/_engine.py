@@ -4,7 +4,9 @@ from alchemist import utils, exceptions
 from alchemist.conf import settings
 import sqlalchemy as sa
 import six
-from sqlalchemy.engine.url import URL
+from contextlib import closing
+import threading
+from sqlalchemy.engine.url import URL, make_url
 
 
 class Engine(object):
@@ -32,7 +34,7 @@ class Engine(object):
         config = settings['DATABASES'][name]
 
         if isinstance(config, six.string_types):
-            url = config
+            url = make_url(config)
             options = {}
 
         else:
@@ -45,6 +47,30 @@ class Engine(object):
                 host=config.get('hostname', config.get('host')),
                 port=config.get('port'),
                 database=config.get('name', config.get('database')))
+
+        # If alchemist is invoked by a test runner we should switch to using
+        # testing databases.
+
+        if settings['TESTING']:
+
+            if url.drivername.startswith('sqlite'):
+
+                # Switch to using an in-memory database for sqlite.
+                url.database = ':memory:'
+
+            else:
+
+                # Switch to using a named testing database for other dialects.
+                ident = threading.current_thread().ident
+                url.database = database = 'test_%s_%s' % (url.database, ident)
+
+                # Create the testing database.
+                url.database = None
+                temporary_engine = sa.create_engine(url, **options)
+                with closing(temporary_engine.connect()) as connection:
+                    connection.execute('CREATE DATABASE %s' % database)
+
+                url.database = database
 
         return sa.create_engine(url, **options)
 
