@@ -3,7 +3,6 @@ from __future__ import unicode_literals, absolute_import, division
 from ... import utils
 from .. import metadata, engine
 from .utils import HighlightStream
-from alembic.util import obfuscate_url_pw
 from sqlalchemy_utils import create_mock_engine
 import sys
 
@@ -13,7 +12,7 @@ def op(expression, tables=None, test=None, primary=None, secondary=None,
        offline=False, verbose=False):
 
     if verbose:
-        url = obfuscate_url_pw(engine['default'].url)
+        url = repr(engine['default'].url)
         utils.print_('*', primary, 'default', url)
 
     # Offline preparation cannot commit to the database and should always
