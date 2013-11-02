@@ -3,6 +3,7 @@ from alchemist.test import settings
 from flask import Flask
 from os import path
 import os
+import sys
 import alchemist
 
 
@@ -119,3 +120,65 @@ class TestApplication:
         assert application.name == 'alchemist.tests.a.b'
 
         del os.environ['ALCHEMIST_APPLICATION']
+
+
+
+class TestTestingDetection:
+
+    def setup(self):
+        self.app = Flask('alchemist.tests.a')
+        self.context = self.app.app_context()
+        self.context.push()
+
+    def teardown(self):
+        self.context.pop()
+
+    def test_nose(self):
+        old = sys.argv
+        sys.argv = ['nosetests']
+
+        alchemist.configure(self.app)
+
+        assert self.app.config['TESTING']
+
+        sys.argv = old
+
+    def test_py(self):
+        old = sys.argv
+        sys.argv = ['py.test']
+
+        alchemist.configure(self.app)
+
+        assert self.app.config['TESTING']
+
+        sys.argv = old
+
+    def test_unittest(self):
+        old = sys.argv
+        sys.argv = ['python', 'setup.py', 'test']
+
+        alchemist.configure(self.app)
+
+        assert self.app.config['TESTING']
+
+        sys.argv = old
+
+    def test_alchemist(self):
+        old = sys.argv
+        sys.argv = ['alchemist', 'test']
+
+        alchemist.configure(self.app)
+
+        assert self.app.config['TESTING']
+
+        sys.argv = old
+
+    def test_not(self):
+        old = sys.argv
+        sys.argv = ['alchemist', 'load', '../../test.py']
+
+        alchemist.configure(self.app)
+
+        assert not self.app.config['TESTING']
+
+        sys.argv = old

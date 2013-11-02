@@ -6,9 +6,24 @@ from importlib import import_module
 import flask
 import inspect
 import os
+import sys
 
 
 def configure(self, app):
+
+    # Detect if we are being invoked by a test runner.
+    # Checks the first and second arguments to determine if we are being
+    # run by a test runner.
+    # Able to match `py.test`, `nosetests`, `alchemist test`,
+    # and `python setup.py test`.
+
+    app.config['TESTING'] = False
+    count = 3 if os.path.basename(sys.argv[0]).startswith('python') else 2
+    for argument in sys.argv[0:count]:
+        if 'test' in argument:
+            # We are, in fact, being run by a test runner.
+            app.config['TESTING'] = True
+            break
 
     # Gather configuration from the following places:
     #  1. alchemist.conf.default_settings
