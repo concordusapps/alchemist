@@ -4,14 +4,12 @@ from .server import Server
 from .shell import Shell
 from .settings import Settings
 from .load import Load
-from .db import (Initialize, Clear, Flush, Shell as DBShell,
-                 Status, Revision, Upgrade, Downgrade, History)
+from .db import (Initialize, Clear, Flush, Shell as DBShell)
 
 __all__ = [
     'Server',
     'Shell',
     'Initialize', 'Clear', 'Flush', 'DBShell',
-    'Status', 'Revision', 'Upgrade', 'Downgrade', 'History',
     'Settings',
     'Load'
 ]

@@ -5,8 +5,7 @@ from ._session import Session, session
 from .query import Query
 from .model import (Model, _metadata as metadata, _registry_map as registry,
                     _metadata_map as component_metadata)
-from .operations import (init, clear, flush, shell, status, revision,
-                         upgrade, downgrade, history)
+from .operations import (init, clear, flush, shell)
 
 
 __all__ = [
@@ -22,11 +21,6 @@ __all__ = [
     'clear',
     'flush',
     'shell',
-    'status',
-    'revision',
-    'upgrade',
-    'downgrade',
-    'history',
 ]
 
 # TODO: Support these options perhaps -- look into them at least.
