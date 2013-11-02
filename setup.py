@@ -37,12 +37,10 @@ setup(
     author_email='support@concordusapps.com',
     url='http://github.com/concordusapps/alchemist',
     packages=find_packages('.'),
-    # entry_points={'pytest11': ['alchemist = alchemist.plugin']},
+    entry_points={'pytest11': ['alchemist = alchemist.plugin']},
     dependency_links=[
-        # wsgi_intercept
-        # <https://code.google.com/p/wsgi-intercept/issues/detail?id=25>
-        # 'git+git://github.com/concordusapps/wsgi-intercept.git'
-        # '#egg=wsgi_intercept-0.6.0',
+        'git+git://github.com/concordusapps/wsgi-intercept.git'
+        '#egg=wsgi_intercept-0.6.0',
 
         'git+git://github.com/concordusapps/flask-script.git@edge'
         '#egg=flask-script-edge',
@@ -60,7 +58,9 @@ setup(
         'sqlalchemy >= 0.8',
         'sqlalchemy-utils >= 0.16',
         'alembic >= 0.6, < 0.7',
-        'pygments'
+        'pygments',
+        'requests',
+        'wsgi_intercept == 0.6.0'
     ] + test_requirements,
     tests_require=test_requirements,
     extras_require={
