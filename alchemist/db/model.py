@@ -3,7 +3,7 @@ from __future__ import unicode_literals, absolute_import, division
 from alchemist.db import session
 from alchemist.conf import settings
 from alchemist.db.query import Query
-from sqlalchemy.ext.declarative import declared_attr, DeclarativeMeta
+from sqlalchemy.ext.declarative import declared_attr, DeclarativeMeta, base
 import sqlalchemy as sa
 import weakref
 import re
@@ -164,6 +164,8 @@ class ModelBase(DeclarativeMeta):
 class Model(six.with_metaclass(ModelBase)):
 
     __abstract__ = True
+
+    __init__ = base._declarative_constructor
 
     @declared_attr
     def __tablename__(cls):
