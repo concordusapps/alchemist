@@ -16,7 +16,7 @@ __all__ = [
     'Query',
     'Model',
     'metadata',
-    'components',
+    'component_metadata',
     'registry',
     'init',
     'clear',
