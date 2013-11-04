@@ -38,3 +38,6 @@ def fixture_database(request):
 
     # Initialize the database access layer.
     db.init(database=True)
+
+    # Ensure we clear out the database at the end.
+    request.addfinalizer(lambda: db.clear(database=True))
