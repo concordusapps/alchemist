@@ -31,14 +31,6 @@ class Test(Command):
         module = import_module(name)
         directory = path.join(path.dirname(module.__file__), 'tests')
 
-        # Register fixture to place the test runner in an application context.
-
-        @pytest.fixture(autouse=True, scope='session')
-        def fixture_application(request):
-            context = application.app_context()
-            context.push()
-            request.addfinalizer(lambda: context.pop())
-
         # Execute 'py.test' with the remaining arguments.
 
         pytest.main([directory] + list(*args))
