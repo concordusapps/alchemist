@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, absolute_import, division
 from ... import utils
 from .. import metadata, engine
+from .._engine import clear_cache
 from .utils import HighlightStream
 import sqlalchemy as sa
 from sqlalchemy_utils import (create_mock_engine, create_database,
@@ -61,6 +62,7 @@ def init(**kwargs):
     database = kwargs.pop('database', False)
     if database and not database_exists(engine['default'].url):
         create_database(engine['default'].url, encoding='utf8')
+        clear_cache()
 
     expression = lambda target, table: table.create(target)
     test = lambda target, table: table.exists(target)
@@ -83,6 +85,7 @@ def clear(**kwargs):
     # TODO: Iterate through all engines in name set.
     if database and database_exists(engine['default'].url):
         drop_database(engine['default'].url, encoding='utf8')
+        clear_cache()
 
 
 def flush(**kwargs):

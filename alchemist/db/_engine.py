@@ -67,4 +67,8 @@ class Engine(object):
         return sa.create_engine(url, **options)
 
 
+def clear_cache():
+    Engine.__getitem__._cache.clear()
+
+
 engine = Engine()
