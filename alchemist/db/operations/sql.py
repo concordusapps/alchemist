@@ -3,8 +3,11 @@ from __future__ import unicode_literals, absolute_import, division
 from ... import utils
 from .. import metadata, engine
 from .utils import HighlightStream
-from sqlalchemy_utils import create_mock_engine
+import sqlalchemy as sa
+from sqlalchemy_utils import (create_mock_engine, create_database,
+                              drop_database, database_exists)
 import sys
+import copy
 
 
 def op(expression, tables=None, test=None, primary=None, secondary=None,
@@ -54,25 +57,12 @@ def init(**kwargs):
       - Ensure all tables exist in the database.
     """
 
+    # TODO: Iterate through all engines in name set.
     database = kwargs.pop('database', False)
-    def expression(target, table, mock=False):
+    if database and not database_exists(engine['default'].url):
+        create_database(engine['default'].url, encoding='utf8')
 
-        if not mock and database:
-
-            import ipdb; ipdb.set_trace()
-
-        # # Initialize the databases needed.
-        # url = engine['default']
-        # url.database = None
-
-        # temporary_engine = sa.create_engine(url, **options)
-        # with closing(temporary_engine.connect()) as connection:
-        #     connection.execute('CREATE DATABASE %s' % database)
-
-        # url.database = database
-
-    # Continue to perform table initialization.
-    # expression = lambda target, table: table.create(target)
+    expression = lambda target, table: table.create(target)
     test = lambda target, table: table.exists(target)
     op(expression, test=test, primary='init', secondary='create', **kwargs)
 
@@ -83,10 +73,16 @@ def clear(**kwargs):
     This can be highly destructive as it destroys tables and when all names
     are removed from a database, the database itself.
     """
+
+    database = kwargs.pop('database', False)
     expression = lambda target, table: table.drop(target)
     test = lambda target, table: not table.exists(target)
     op(expression, reversed(metadata.sorted_tables), test=test,
        primary='clear', secondary='drop', **kwargs)
+
+    # TODO: Iterate through all engines in name set.
+    if database and database_exists(engine['default'].url):
+        drop_database(engine['default'].url, encoding='utf8')
 
 
 def flush(**kwargs):
@@ -94,6 +90,7 @@ def flush(**kwargs):
 
     This can be highly destructive as it destroys all data.
     """
+
     expression = lambda target, table: target.execute(table.delete())
     test = lambda target, table: not table.exists(target)
     op(expression, reversed(metadata.sorted_tables), test=test,

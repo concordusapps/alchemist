@@ -27,7 +27,11 @@ class Initialize(Command):
 
     namespace = 'db'
 
-    option_list = common_options
+    option_list = common_options + [
+        Option('--database', dest='database',
+            action='store_true', required=False, default=False,
+            help='Initialize the database before tables.'),
+    ]
 
     def run(self, *args, **kwargs):
         db.init(*args, **kwargs)
@@ -41,7 +45,11 @@ class Clear(Command):
 
     namespace = 'db'
 
-    option_list = common_options
+    option_list = common_options + [
+        Option('--database', dest='database',
+            action='store_true', required=False, default=False,
+            help='Clear the database after tables.'),
+    ]
 
     def run(self, *args, **kwargs):
         db.clear(*args, **kwargs)
