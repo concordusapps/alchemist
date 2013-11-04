@@ -34,7 +34,7 @@ def fixture_database(request):
     # TODO: Create testing database.
 
     # Clear out old database contents.
-    db.clear()
+    db.clear(database=True)
 
     # Initialize the database access layer.
-    db.init()
+    db.init(database=True)

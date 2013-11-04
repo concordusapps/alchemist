@@ -78,7 +78,7 @@ def clear(**kwargs):
 
     database = kwargs.pop('database', False)
     expression = lambda target, table: table.drop(target)
-    test = lambda target, table: not table.exists(target)
+    test = lambda eng, tab: database_exists(eng.url) and not tab.exists(eng)
     op(expression, reversed(metadata.sorted_tables), test=test,
        primary='clear', secondary='drop', **kwargs)
 
