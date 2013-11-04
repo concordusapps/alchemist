@@ -64,14 +64,6 @@ class Engine(object):
                 ident = threading.current_thread().ident
                 url.database = database = 'test_%s_%s' % (url.database, ident)
 
-                # Create the testing database.
-                url.database = None
-                temporary_engine = sa.create_engine(url, **options)
-                with closing(temporary_engine.connect()) as connection:
-                    connection.execute('CREATE DATABASE %s' % database)
-
-                url.database = database
-
         return sa.create_engine(url, **options)
 
 

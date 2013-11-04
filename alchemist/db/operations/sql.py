@@ -8,7 +8,7 @@ import sys
 
 
 def op(expression, tables=None, test=None, primary=None, secondary=None,
-       names=None, databases=None, echo=False, commit=True,
+       names=None, echo=False, commit=True,
        offline=False, verbose=False):
 
     if verbose:
@@ -40,7 +40,7 @@ def op(expression, tables=None, test=None, primary=None, secondary=None,
         if echo:
             stream = HighlightStream(sys.stdout)
             mock = create_mock_engine(target, stream)
-            expression(mock, table)
+            expression(mock, table, mock=True)
 
         if commit:
             expression(target, table)
@@ -53,7 +53,26 @@ def init(**kwargs):
       - Ensure the database in question exists
       - Ensure all tables exist in the database.
     """
-    expression = lambda target, table: table.create(target)
+
+    database = kwargs.pop('database', False)
+    def expression(target, table, mock=False):
+
+        if not mock and database:
+
+            import ipdb; ipdb.set_trace()
+
+        # # Initialize the databases needed.
+        # url = engine['default']
+        # url.database = None
+
+        # temporary_engine = sa.create_engine(url, **options)
+        # with closing(temporary_engine.connect()) as connection:
+        #     connection.execute('CREATE DATABASE %s' % database)
+
+        # url.database = database
+
+    # Continue to perform table initialization.
+    # expression = lambda target, table: table.create(target)
     test = lambda target, table: table.exists(target)
     op(expression, test=test, primary='init', secondary='create', **kwargs)
 
