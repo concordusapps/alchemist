@@ -137,7 +137,8 @@ class TestDatabase(CommandTest):
 
         target.assert_called()
         target.assert_called_with(
-            echo=False, names=[], verbose=True, commit=True, offline=False)
+            echo=False, names=[], verbose=True, commit=True, offline=False,
+            database=False)
 
     def test_init_echo(self):
         cmd = ['db', 'init', '--echo']
@@ -145,7 +146,8 @@ class TestDatabase(CommandTest):
 
         target.assert_called()
         target.assert_called_with(
-            echo=True, names=[], verbose=True, commit=True, offline=False)
+            echo=True, names=[], verbose=True, commit=True, offline=False,
+            database=False)
 
     def test_init_offline(self):
         cmd = ['db', 'init', '--offline', '--echo']
@@ -153,7 +155,8 @@ class TestDatabase(CommandTest):
 
         target.assert_called()
         target.assert_called_with(
-            echo=True, names=[], verbose=True, commit=True, offline=True)
+            echo=True, names=[], verbose=True, commit=True, offline=True,
+            database=False)
 
     def test_clear_default(self):
         cmd = ['db', 'clear']
@@ -161,7 +164,8 @@ class TestDatabase(CommandTest):
 
         target.assert_called()
         target.assert_called_with(
-            echo=False, names=[], verbose=True, commit=True, offline=False)
+            echo=False, names=[], verbose=True, commit=True, offline=False,
+            database=False)
 
     def test_flush_default(self):
         cmd = ['db', 'flush']
