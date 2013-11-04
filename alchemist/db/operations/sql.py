@@ -35,9 +35,6 @@ def op(expression, tables=None, test=None, primary=None, secondary=None,
 
         target = engine['default']
 
-        if not database_exists(target.url):
-            continue
-
         if not offline and test(target, table):
             continue
 
