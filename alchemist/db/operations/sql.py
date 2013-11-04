@@ -84,7 +84,7 @@ def clear(**kwargs):
 
     # TODO: Iterate through all engines in name set.
     if database and database_exists(engine['default'].url):
-        drop_database(engine['default'].url, encoding='utf8')
+        drop_database(engine['default'].url)
         clear_cache()
 
 
