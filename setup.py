@@ -13,6 +13,10 @@ test_requirements = [
 
 if sys.version_info[0] < 3:
     test_requirements += ['mock']
+    mysql_requirements = ['oursql']
+
+else:
+    mysql_requirements = ['oursql == 0.9.4']
 
 
 setup(
@@ -64,6 +68,6 @@ setup(
     ] + test_requirements,
     tests_require=test_requirements,
     extras_require={
-        'mysql': ['oursql >= 0.9.4']
+        'mysql': mysql_requirements
     }
 )
