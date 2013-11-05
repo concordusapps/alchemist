@@ -43,9 +43,6 @@ setup(
     packages=find_packages('.'),
     entry_points={'pytest11': ['alchemist = alchemist.plugin']},
     dependency_links=[
-        'git+git://github.com/concordusapps/wsgi-intercept.git'
-        '#egg=wsgi_intercept-0.6.0',
-
         'git+git://github.com/concordusapps/flask-script.git@edge'
         '#egg=flask-script-edge',
 
@@ -67,7 +64,7 @@ setup(
         'alembic >= 0.6, < 0.7',
         'pygments',
         'requests',
-        'wsgi_intercept == 0.6.0'
+        'wsgi_intercept >= 0.6.0'
     ] + test_requirements,
     tests_require=test_requirements,
     extras_require={
