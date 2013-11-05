@@ -58,3 +58,10 @@ def _teardown_session(*args, **kwargs):
 
 
 session = LocalProxy(_get_session)
+
+
+def refresh():
+    if session:
+        session.expire_all()
+        session.expunge_all()
+        session.commit()

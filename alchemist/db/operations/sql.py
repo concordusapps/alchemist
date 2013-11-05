@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import, division
 from ... import utils
-from .. import metadata, engine
+from .. import metadata, engine, refresh
 from .._engine import clear_cache
 from .utils import HighlightStream
 from sqlalchemy_utils import (create_mock_engine, create_database,
@@ -46,6 +46,11 @@ def op(expression, tables=None, test=None, primary=None, secondary=None,
 
         if commit:
             expression(target, table)
+
+    # Refresh the session; ensure any further operations succeed in a
+    # new context.
+
+    refresh()
 
 
 def init(**kwargs):
