@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import, division
 from ... import utils
-from .. import metadata, engine, refresh
+from .. import metadata, engine
 from .._engine import clear_cache
+from .._session import refresh
 from .utils import HighlightStream
 from sqlalchemy_utils import (create_mock_engine, create_database,
                               drop_database, database_exists)
