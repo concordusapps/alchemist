@@ -39,29 +39,14 @@ class Test(Command):
 
             utils.print_('*', 'test', name, path.relpath(path.abspath(tests)))
 
-            # Decide on command and arguments.
-            # Alchemist should not use its own plugin.
-
-            if name == 'alchemist':
-                command = ['py.test', '-p', 'no:alchemist']
-
-            else:
-                command = ['py.test']
-
-            # Pre-function is needed to create the app context.
-
-            if name != 'alchemist':
-                def pre(name=name):
-                    application = _get_app(name)
-                    application.app_context().push()
-
-            else:
-                pre = lambda: None
-
             # Execute 'py.test' with the remaining arguments.
 
-            cwd = path.dirname(tests)
-            tests = path.relpath(tests, cwd)
-            command += [tests] + list(*args)
-            process = Popen(command, cwd=cwd, preexec_fn=pre)
-            process.wait()
+            if name == 'alchemist':
+                cwd = path.dirname(tests)
+                tests = path.relpath(tests, cwd)
+                cmd = ['py.test', '-p', 'no:alchemist'] + [tests] + list(*args)
+                process = Popen(cmd, cwd=cwd)
+                process.wait()
+
+            else:
+                pytest.main([tests] + list(*args))
