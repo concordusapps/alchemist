@@ -61,12 +61,15 @@ class TestBase:
         headers = kwargs.get('headers')
 
         # Automatically serialize and send data.
-        if data is None:
-            data = {}
-
         if format == 'json':
-            kwargs.setdefault('body', json.dumps(data))
+            if data is None:
+                data = {}
+
+            kwargs['data'] = json.dumps(data)
             headers.setdefault('Content-Type', 'application/json')
+
+        else:
+            kwargs['data'] = data
 
         # Set some defaults for requests.
         kwargs.setdefault('allow_redirects', False)
