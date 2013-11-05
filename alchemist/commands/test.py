@@ -23,6 +23,7 @@ class Test(Command):
 
     def run(self, *args, **kwargs):
 
+        collected = []
         names = kwargs.pop('names')
         for name in (names or settings['COMPONENTS']):
 
@@ -35,18 +36,10 @@ class Test(Command):
                 if not path.exists(tests):
                     continue
 
-            # Indicate progress.
+            # Collect all test components that are not alchemist.
 
-            utils.print_('*', 'test', name, path.relpath(path.abspath(tests)))
+            if name != 'alchemist':
+                collected.append(tests)
 
-            # Execute 'py.test' with the remaining arguments.
-
-            if name == 'alchemist':
-                cwd = path.dirname(tests)
-                tests = path.relpath(tests, cwd)
-                cmd = ['py.test', '-p', 'no:alchemist'] + [tests] + list(*args)
-                process = Popen(cmd, cwd=cwd)
-                process.wait()
-
-            else:
-                pytest.main([tests] + list(*args))
+        # Run collected test modules.
+        pytest.main(collected + list(*args))
