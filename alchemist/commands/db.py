@@ -29,8 +29,8 @@ class Initialize(Command):
 
     option_list = common_options + [
         Option('--database', dest='database',
-            action='store_true', required=False, default=False,
-            help='Initialize the database before tables.'),
+               action='store_true', required=False, default=False,
+               help='Initialize the database before tables.'),
     ]
 
     def run(self, *args, **kwargs):
@@ -47,8 +47,8 @@ class Clear(Command):
 
     option_list = common_options + [
         Option('--database', dest='database',
-            action='store_true', required=False, default=False,
-            help='Clear the database after tables.'),
+               action='store_true', required=False, default=False,
+               help='Clear the database after tables.'),
     ]
 
     def run(self, *args, **kwargs):

@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import, division
 from flask.ext.script import Command, Option
-from alchemist import app, utils
-from alchemist.app import _get_application_from_name as _get_app
 import pytest
 from os import path
 from alchemist.conf import settings
 from importlib import import_module
-from subprocess import Popen
 
 
 class Test(Command):

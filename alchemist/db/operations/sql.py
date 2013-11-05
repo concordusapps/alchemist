@@ -4,11 +4,9 @@ from ... import utils
 from .. import metadata, engine
 from .._engine import clear_cache
 from .utils import HighlightStream
-import sqlalchemy as sa
 from sqlalchemy_utils import (create_mock_engine, create_database,
                               drop_database, database_exists)
 import sys
-import copy
 
 
 def op(expression, tables=None, test=None, primary=None, secondary=None,

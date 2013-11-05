@@ -4,7 +4,6 @@ from alchemist import utils, exceptions
 from alchemist.conf import settings
 import sqlalchemy as sa
 import six
-from contextlib import closing
 import threading
 from sqlalchemy.engine.url import URL, make_url
 
@@ -62,7 +61,7 @@ class Engine(object):
 
                 # Switch to using a named testing database for other dialects.
                 ident = threading.current_thread().ident
-                url.database = database = 'test_%s_%s' % (url.database, ident)
+                url.database = 'test_%s_%s' % (url.database, ident)
 
         return sa.create_engine(url, **options)
 
