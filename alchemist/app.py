@@ -115,7 +115,7 @@ def _find_application(self):
     # This is intended for ease during development and for production
     # to lock-in the application via the environment variable.
 
-    for frame in inspect.stack()[1:]:
+    for frame in reversed(inspect.stack()[1:]):
         name = frame[0].f_globals.get('__package__')
         if (name and (not name.startswith('alchemist')
                       or name.startswith('alchemist.tests'))):
