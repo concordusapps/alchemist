@@ -40,4 +40,8 @@ def fixture_database(request):
     db.init(database=True)
 
     # Ensure we clear out the database at the end.
-    request.addfinalizer(lambda: db.clear(database=True))
+    def finalizer():
+        db.session.rollback()
+        db.clear(database=True)
+
+    request.addfinalizer(finalizer)
