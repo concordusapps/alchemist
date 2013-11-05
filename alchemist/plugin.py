@@ -3,7 +3,7 @@ import pytest
 from alchemist import db
 import flask
 from wsgi_intercept import add_wsgi_intercept, remove_wsgi_intercept
-from wsgi_intercept.requests_intercept import install_opener, uninstall_opener
+from wsgi_intercept.requests_intercept import install, uninstall
 
 
 #! Host at which the test server will bein intercepted at.
@@ -16,7 +16,7 @@ PORT = 5000
 @pytest.fixture(autouse=True, scope='session')
 def fixture_server(request):
     # Install the WSGI interception layer.
-    install_opener()
+    install()
 
     # Enable the WSGI interception layer.
     add_wsgi_intercept(HOST, PORT, lambda: flask.current_app)
@@ -24,7 +24,7 @@ def fixture_server(request):
     # Add a finalizer to remove the interception layer.
     def finalize():
         remove_wsgi_intercept(HOST, PORT)
-        uninstall_opener()
+        uninstall()
 
     request.addfinalizer(finalize)
 
