@@ -68,7 +68,7 @@ def configure(self, app):
     components.find('models', app, raw=True)
 
 
-@utils.memoize
+# @utils.memoize
 def _get_application_from_name(self, name):
 
     # Take the passed name (eg. 'sandbox') and check the following
@@ -78,12 +78,15 @@ def _get_application_from_name(self, name):
     #   <name>.app.application
     #   <name>.app.app
 
+    if not name:
+        return None
+
     for part in ('', '.app'):
         try:
             module = import_module(name + part)
 
         except ImportError:
-            return None
+            continue
 
         app = getattr(module, 'app', None)
         if app and isinstance(app, flask.Flask):
@@ -92,6 +95,8 @@ def _get_application_from_name(self, name):
         app = getattr(module, 'application', None)
         if app and isinstance(app, flask.Flask):
             return app
+
+    return self._get_application_from_name('.'.join(name.split('.')[:-1]))
 
 
 @utils.memoize
