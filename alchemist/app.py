@@ -68,7 +68,7 @@ def configure(self, app):
     components.find('models', app, raw=True)
 
 
-# @utils.memoize
+@utils.memoize
 def _get_application_from_name(self, name):
 
     # Take the passed name (eg. 'sandbox') and check the following
@@ -117,7 +117,8 @@ def _find_application(self):
 
     for frame in inspect.stack()[1:]:
         name = frame[0].f_globals.get('__package__')
-        if name and name != 'alchemist':
+        if (name and (not name.startswith('alchemist')
+                      or name.startswith('alchemist.tests'))):
             app = self._get_application_from_name(name)
             if app:
                 return app
