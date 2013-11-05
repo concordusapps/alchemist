@@ -118,7 +118,7 @@ def _find_application(self):
     for frame in reversed(inspect.stack()[1:]):
         name = frame[0].f_globals.get('__package__')
         if (name and (not name.startswith('alchemist')
-                      or name.startswith('alchemist.tests'))):
+                      or name.startswith('alchemist.tests.a'))):
             app = self._get_application_from_name(name)
             if app:
                 return app
