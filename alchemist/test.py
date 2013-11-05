@@ -3,6 +3,7 @@ from __future__ import unicode_literals, absolute_import, division
 from contextlib import contextmanager
 from alchemist import db
 import requests
+import json
 
 
 @contextmanager
@@ -49,10 +50,23 @@ class TestBase:
 
         # TODO: Re-load any desired fixtures.
 
-    def request(self, path='', url=None, *args, **kwargs):
+    def request(self, path='', url=None, data=None, format='json',
+                *args, **kwargs):
         # Helper to forward the port and host if url is not specified.
         if url is None:
             url = 'http://{}:{}'.format(self.host, self.port)
+
+        # Get request header dictionary.
+        kwargs.setdefault('headers', {})
+        headers = kwargs.get('headers')
+
+        # Automatically serialize and send data.
+        if data is None:
+            data = {}
+
+        if format == 'json':
+            kwargs.setdefault('body', json.dumps(data))
+            headers.setdefault('Content-Type', 'application/json')
 
         # Set some defaults for requests.
         kwargs.setdefault('allow_redirects', False)
