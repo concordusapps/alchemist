@@ -7,6 +7,8 @@ import flask
 import inspect
 import os
 import sys
+import sqlalchemy as sa
+from sqlalchemy_utils import coercion_listener
 
 
 def configure(self, app):
@@ -66,6 +68,9 @@ def configure(self, app):
     # registered components.
 
     components.find('models', app, raw=True)
+
+    # Register the coercion listener.
+    sa.event.listen(sa.orm.mapper, 'mapper_configured', coercion_listener)
 
 
 @utils.memoize
