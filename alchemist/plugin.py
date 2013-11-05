@@ -31,8 +31,6 @@ def fixture_server(request):
 
 @pytest.fixture(autouse=True, scope='session')
 def fixture_database(request):
-    # TODO: Create testing database.
-
     # Clear out old database contents.
     db.clear(database=True)
 
@@ -45,3 +43,8 @@ def fixture_database(request):
         db.clear(database=True)
 
     request.addfinalizer(finalizer)
+
+
+@pytest.fixture(autouse=True, scope='function')
+def fixture_data(request):
+    request.addfinalizer(lambda: db.flush())
