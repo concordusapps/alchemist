@@ -30,6 +30,8 @@ class Test(Command):
 
         module = import_module(name)
         directory = path.join(path.dirname(module.__file__), 'tests')
+        if not path.exists(directory):
+            directory += '.py'
 
         # Execute 'py.test' with the remaining arguments.
 
