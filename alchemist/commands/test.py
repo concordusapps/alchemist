@@ -3,6 +3,7 @@ from __future__ import unicode_literals, absolute_import, division
 from flask.ext.script import Command, Option
 import pytest
 from os import path
+from alchemist import app
 from alchemist.conf import settings
 from importlib import import_module
 
@@ -22,7 +23,8 @@ class Test(Command):
 
         collected = []
         names = kwargs.pop('names')
-        for name in (names or settings['COMPONENTS']):
+        default_names = ([app.application.name] + settings['COMPONENTS'])
+        for name in (names or default_names):
 
             # Get the tests module or package location.
 
