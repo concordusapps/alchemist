@@ -39,21 +39,21 @@ def configure(self, app):
     except ImportError:
         pass
 
-    #  3. $ALCHEMIST_SETTINGS_MODULE
-
-    app.config.from_envvar('ALCHEMIST_SETTINGS_MODULE', silent=True)
-
-    #  4. $<package>_SETTINGS_MODULE
-
-    var = '%s_SETTINGS_MODULE' % app.name.replace('.', '_').upper()
-    app.config.from_envvar(var, silent=True)
-
-    # Gather configuration from each registered component.
+    #  3. Gather configuration from each registered component.
 
     name = app.name
     for component in components.find('settings', app, raw=True):
         if component.__package__ != name or component.__name__ != name:
             app.config.from_object(component)
+
+    #  4. $ALCHEMIST_SETTINGS_MODULE
+
+    app.config.from_envvar('ALCHEMIST_SETTINGS_MODULE', silent=True)
+
+    #  5. $<package>_SETTINGS_MODULE
+
+    var = '%s_SETTINGS_MODULE' % app.name.replace('.', '_').upper()
+    app.config.from_envvar(var, silent=True)
 
     # Resolve deferred configuration.
 
