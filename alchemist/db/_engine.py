@@ -63,6 +63,27 @@ class Engine(object):
                 ident = threading.current_thread().ident
                 url.database = 'test_%s_%s' % (url.database, ident)
 
+        # Apply MySQL hacks to make MySQL play nice.
+        pool_size = None
+        pool_recycle = None
+        if url.drivername.startswith('mysql'):
+            pool_size = 10
+            pool_recycle = 7200
+
+        # Get "global" options for the database engine.
+        pool_size = settings.get('DATABASE_POOL_SIZE', pool_size)
+        if pool_size:
+            options.setdefault('pool_size', pool_size)
+
+        pool_recycle = settings.get('DATABASE_POOL_RECYCLE', pool_recycle)
+        if pool_recycle:
+            options.setdefault('pool_recycle', pool_recycle)
+
+        pool_timeout = settings.get('DATABASE_POOL_TIMEOUT')
+        if pool_timeout:
+            options.setdefault('pool_timeout', pool_timeout)
+
+        # Forward configuration to sqlalchemy and create the engine.
         return sa.create_engine(url, **options)
 
 
