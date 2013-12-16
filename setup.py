@@ -43,24 +43,21 @@ setup(
     packages=find_packages('.'),
     entry_points={'pytest11': ['alchemist = alchemist.plugin']},
     dependency_links=[
-        'git+git://github.com/concordusapps/flask-script.git@edge'
-        '#egg=flask-script-edge',
-
         'https://launchpad.net/oursql/py3k/py3k-0.9.4/+download/'
         'oursql-0.9.4.tar.gz#egg=oursql-0.9.4',
 
         'git+git://github.com/kvesteri/sqlalchemy-utils.git'
-        '@topics/database-functions#egg=sqlalchemy-utils-edge',
+        '@topics/database-functions#egg=sqlalchemy-utils-0.21.0',
     ],
     install_requires=[
         'colorama',
         'termcolor >= 1.1, < 1.2',
         'flask >= 0.10',
         'blinker >= 1.3',
-        'flask-script == edge',
         'flask-components >= 0.1',
+        'flask-script >= 0.6.6',
         'sqlalchemy >= 0.8',
-        'sqlalchemy-utils == edge',
+        'sqlalchemy-utils >= 0.21',
         'alembic >= 0.6, < 0.7',
         'pygments',
         'requests',
