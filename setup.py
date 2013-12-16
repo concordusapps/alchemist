@@ -47,7 +47,7 @@ setup(
         'oursql-0.9.4.tar.gz#egg=oursql-0.9.4',
 
         'git+git://github.com/kvesteri/sqlalchemy-utils.git'
-        '@topics/database-functions#egg=sqlalchemy-utils-0.21.0',
+        '#egg=sqlalchemy-utils-0.21.0',
     ],
     install_requires=[
         'colorama',
