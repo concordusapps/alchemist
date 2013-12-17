@@ -23,7 +23,7 @@ class Test(Command):
 
         collected = []
         names = kwargs.pop('names')
-        default_names = ([app.application.name] + settings['COMPONENTS'])
+        default_names = {app.application.name} | set(settings['COMPONENTS'])
         for name in (names or default_names):
 
             # Get the tests module or package location.
