@@ -15,3 +15,6 @@ SERVER_PROCESSES = 1
 
 # List of registered components.
 COMPONENTS = ['alchemist']
+
+# Default metaclass to use for the declarative extension with SQLAlchemist.
+MODEL_METACLASS = 'sqlalchemy.ext.declarative.api.DeclarativeMeta'

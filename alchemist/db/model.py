@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, absolute_import, division
 from alchemist.db import session
 from alchemist.conf import settings
+from importlib import import_module
 from alchemist.db.query import Query
 from sqlalchemy.orm.util import has_identity
 from sqlalchemy.ext.declarative import declared_attr, DeclarativeMeta, base
@@ -73,7 +74,21 @@ def _is_model(name, bases, attrs):
     return False
 
 
-class ModelBase(DeclarativeMeta):
+class ModelBaseProxy(type):
+
+    def __new__(cls, name, bases, attrs):
+        # Resolve the metaclass we should be derived from.
+        meta_name = settings['MODEL_METACLASS']
+        segs = meta_name.split('.')
+        meta = getattr(import_module('.'.join(segs[:-1])), segs[-1])
+
+        if not issubclass(bases[0], meta):
+            bases = meta,
+
+        return super(ModelBaseProxy, cls).__new__(cls, name, bases, attrs)
+
+
+class ModelBase(six.with_metaclass(ModelBaseProxy, type)):
     """The metaclass for user-defined models.
 
     The basic concept is as follows: every model declared in a registered
@@ -140,7 +155,12 @@ class ModelBase(DeclarativeMeta):
         return super(ModelBase, cls).__new__(cls, name, bases, attrs)
 
     def __init__(self, name, bases, attrs):
+        # Initialize ourself.
         super(ModelBase, self).__init__(name, bases, attrs)
+
+        # Just short-circuit if we're that six contraption, NewBase.
+        if self.__module__ == 'alchemist.db.model' and name == 'NewBase':
+            return
 
         abstract = attrs.get('__abstract__', False)
         if _is_model(name, bases, attrs) and not abstract:
