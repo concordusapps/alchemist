@@ -5,6 +5,7 @@ from flask.ext import components
 from importlib import import_module
 import flask
 import inspect
+import threading
 import os
 import sys
 import sqlalchemy as sa
@@ -71,6 +72,20 @@ def configure(self, app):
 
     # Register the coercion listener.
     sa.event.listen(sa.orm.mapper, 'mapper_configured', coercion_listener)
+
+    # Register profiling event listeners.
+    if app.config.get("ALCHEMIST_TRACE"):
+        @sa.event.listens_for(sa.pool.Pool, 'connect')
+        def _on_connect(*args):
+            ident = threading.current_thread().ident
+            print("\033[33;1m[alchemist:%s]" % ident,
+                  "sqlalchemy.pool:connect\033[0m")
+
+        @sa.event.listens_for(sa.pool.Pool, 'checkout')
+        def _on_checkout(*args):
+            ident = threading.current_thread().ident
+            print("\033[33;1m[alchemist:%s]" % ident,
+                  "sqlalchemy.pool:checkout\033[0m")
 
 
 @utils.memoize

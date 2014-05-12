@@ -83,6 +83,11 @@ class Engine(object):
         if pool_timeout:
             options.setdefault('pool_timeout', pool_timeout)
 
+        echo = (settings.get('DATABASE_ECHO')
+                or settings.get('ALCHEMIST_TRACE'))
+        if echo:
+            options.setdefault('echo', True)
+
         # Forward configuration to sqlalchemy and create the engine.
         return sa.create_engine(url, **options)
 

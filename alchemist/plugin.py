@@ -39,12 +39,12 @@ def fixture_database(request):
 
     # Ensure we clear out the database at the end.
     def finalizer():
-        db.session.rollback()
+        # db.session.rollback()
         db.clear(database=True)
 
     request.addfinalizer(finalizer)
 
 
-@pytest.fixture(autouse=True, scope='function')
-def fixture_data(request):
-    request.addfinalizer(lambda: db.flush())
+# @pytest.fixture(autouse=True, scope='function')
+# def fixture_data(request):
+#     request.addfinalizer(lambda: db.flush())

@@ -3,6 +3,7 @@ from __future__ import unicode_literals, absolute_import, division
 from contextlib import contextmanager
 from alchemist import db
 import requests
+import pytest
 import json
 
 
@@ -33,20 +34,30 @@ class TestBase:
     #! Port at which the test server will be intercepted at.
     port = 5000
 
-    def setup_class(cls):
-        # Create a shortcut for querying because we're all lazy and we
-        # know it.
-        cls.Q = lambda s, x: db.session.query(x)
+    # def setup_class(cls):
+    #     # Create a shortcut for querying because we're all lazy and we
+    #     # know it.
+    #     cls.Q = lambda s, x: db.session.query(x)
 
-    def teardown(self):
-        # Rollback the session.
+    @pytest.fixture(autouse=True, scope='function')
+    def fixture_database_session(self, request):
+        # Begin a nested session.
         db.session.rollback()
+        db.session.rollback()
+        db.session.begin(subtransactions=True)
+
+        def finalize():
+            # Rollback the session (twice because were nested).
+            db.session.rollback()
+            db.session.rollback()
+
+        request.addfinalizer(finalize)
 
         # Flush the database access layer.
-        db.flush()
+        # db.flush()
 
         # Commit all of the deletes.
-        db.session.commit()
+        # db.session.commit()
 
         # TODO: Re-load any desired fixtures.
 
