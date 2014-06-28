@@ -84,7 +84,15 @@ class Engine(object):
             options.setdefault('pool_timeout', pool_timeout)
 
         # Forward configuration to sqlalchemy and create the engine.
-        return sa.create_engine(url, **options)
+        engine = sa.create_engine(url, **options)
+
+        if settings["DEBUG"]:
+            # Create a no-op listener if we're in debug mode.
+            from sqlalchemy.event import listen
+            listen(engine, "after_cursor_execute", lambda *a, **kw: None)
+
+        # Return the created engine.
+        return engine
 
 
 def clear_cache():
