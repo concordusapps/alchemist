@@ -54,7 +54,7 @@ class DispatcherMiddleware(BaseDispatcherMiddleware):
     def __init__(self, app, mounts):
         # Load each mount (if needed) using import_module
         for route, application in mounts.items():
-            if isinstance(application, str):
+            if isinstance(application, six.string_types):
                 module, name = application.rsplit(".", 1)
                 mounts[route] = getattr(import_module(module), name)
 
