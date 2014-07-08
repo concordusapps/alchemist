@@ -33,7 +33,7 @@ class Initialize(Command):
                help='Initialize the database before tables.'),
     ]
 
-    def __call__(self, *args, **kwargs):
+    def run(self, *args, **kwargs):
         db.init(*args, **kwargs)
 
 
@@ -51,7 +51,7 @@ class Clear(Command):
                help='Clear the database after tables.'),
     ]
 
-    def __call__(self, *args, **kwargs):
+    def run(self, *args, **kwargs):
         db.clear(*args, **kwargs)
 
 
@@ -65,7 +65,7 @@ class Flush(Command):
 
     option_list = common_options
 
-    def __call__(self, *args, **kwargs):
+    def run(self, *args, **kwargs):
         db.flush(*args, **kwargs)
 
 
@@ -82,5 +82,5 @@ class Shell(Command):
                help='The database to drop into the shell for.'),
     ]
 
-    def __call__(self, *args, **kwargs):
+    def run(self, *args, **kwargs):
         db.shell(*args, **kwargs)

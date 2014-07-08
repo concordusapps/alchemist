@@ -5,6 +5,8 @@ import sys
 import six
 import functools
 from termcolor import colored
+from werkzeug.wsgi import DispatcherMiddleware as BaseDispatcherMiddleware
+from importlib import import_module
 
 
 def make_module_class(name):
@@ -45,3 +47,19 @@ def print_(indicator, name, target='', extra=''):
         colored(target, 'white'),
         colored(extra, 'white', attrs=['dark']),
         file=sys.stderr)
+
+
+class DispatcherMiddleware(BaseDispatcherMiddleware):
+
+    def __init__(self, app, mounts):
+        # Load each mount (if needed) using import_module
+        for route, application in mounts.items():
+            if isinstance(application, str):
+                module, name = application.rsplit(".", 1)
+                mounts[route] = getattr(import_module(module), name)
+
+        # Continue initialization.
+        super().__init__(app, mounts)
+
+    def __getattr__(self, name):
+        return getattr(self.app, name)
