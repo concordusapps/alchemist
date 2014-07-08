@@ -14,7 +14,7 @@ class Settings(script.Command):
 
     name = 'settings'
 
-    def handle(self, app, **kwargs):
+    def __call__(self, app, **kwargs):
 
         text = pprint.pformat(dict(app.config))
 

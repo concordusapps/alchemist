@@ -16,11 +16,11 @@ class Server(script.Server):
         kwargs.setdefault('use_debugger', None)
         kwargs.setdefault('use_reloader', None)
         kwargs.setdefault('threaded', None)
-        kwargs.setdefault('processes', None)
+        kwargs.setdefault('processes', 1)
 
         super(Server, self).__init__(*args, **kwargs)
 
-    def handle(self, app, **kwargs):
+    def __call__(self, app, **kwargs):
 
         # Collect default server configuration from the application config.
         config = app.config
@@ -32,4 +32,4 @@ class Server(script.Server):
         kwargs.setdefault('threaded', config.get('SERVER_THREADED'))
         kwargs.setdefault('processes', config.get('SERVER_PROCESSES'))
 
-        super(Server, self).handle(app, **kwargs)
+        super(Server, self).__call__(app, **kwargs)
