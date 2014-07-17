@@ -8,8 +8,8 @@ DEBUG = True
 # Default server configuration.
 SERVER_HOST = '::1'
 SERVER_PORT = 8000
-SERVER_DEBUG = defer('DEBUG')
-SERVER_RELOAD = defer('DEBUG')
+# SERVER_RELOAD = defer('DEBUG')
+# SERVER_DEBUG = defer('DEBUG')
 SERVER_THREADED = False
 SERVER_PROCESSES = 1
 
