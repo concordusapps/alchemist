@@ -5,11 +5,13 @@ from alchemist.conf import settings
 from importlib import import_module
 from alchemist.db.query import Query
 from sqlalchemy.orm.util import has_identity
+from sqlalchemy.ext.declarative import clsregistry
 from sqlalchemy.ext.declarative import declared_attr, DeclarativeMeta, base
 import sqlalchemy as sa
 import weakref
 import re
 import six
+import warnings
 
 
 def _component_of(name):
@@ -134,6 +136,12 @@ class ModelBase(six.with_metaclass(ModelBaseProxy, type)):
         if not _is_model(name, bases, attrs):
 
             return super(ModelBase, cls).__new__(cls, name, bases, attrs)
+
+        # Default `extend_existing`
+        if "__table_args__" not in attrs:
+            attrs["__table_args__"] = ()
+        attrs["__table_args__"] = attrs["__table_args__"] + (
+            {"extend_existing": True},)
 
         # Check if this model is in a registered component and set its
         # declarative registry and metadata to share the global if so; else,

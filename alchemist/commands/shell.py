@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import, division
 from flask.ext import script
+import alchemist
+from os import path
 from alchemist import db
 from termcolor import colored
 from collections import defaultdict
@@ -83,18 +85,32 @@ class Shell(script.Shell):
 
         return options
 
-    def get_context(self, context=None):
+    def get_context(self):
         if not self.base_context:
             return self.make_context()
 
         return self.make_context(context=self.base_context)
 
-    def run(self, pipe, *args, **kwargs):
+    def run(self, pipe, no_ipython, no_bpython):
         if pipe:
             # User is attempting to pipe in script through stdin.
             text = sys.stdin.read()
             exec(text, None, _make_context())
             return
+
+        # Try IPython (with autoreload)
+        try:
+            from IPython.terminal.ipapp import TerminalIPythonApp
+            app = TerminalIPythonApp(user_ns=self.get_context())
+            config_file = path.join(
+                path.dirname(alchemist.__file__), "ipython_startup.ipy")
+            app.init_shell()
+            app.shell.banner = self.banner
+            app.initialize(argv=["-i", config_file])
+            app.start()
+            return
+        except ImportError:
+            pass
 
         # Fallback to normal cycle.
         super(Shell, self).run(*args, **kwargs)
