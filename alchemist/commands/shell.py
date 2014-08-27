@@ -14,15 +14,23 @@ def _iter_context():
                 yield name, model
 
 
-def _make_context():
-    """Create the namespace of items already pre-imported when using shell
+def _make_context(context=None):
+    """Create the namespace of items already pre-imported when using shell.
+
+    Accepts a dict with the desired namespace as the key, and the object as the
+    value.
     """
     namespace = {'db': db, 'session': db.session}
     namespace.update(_iter_context())
+
+    if context is not None:
+        namespace.update(context)
+
     return namespace
 
 
 class Shell(script.Shell):
+
     """
     Runs a Python shell inside an application context with all
     models pre-loaded.
@@ -52,12 +60,19 @@ class Shell(script.Shell):
         pass
 
     def __init__(self, *args, **kwargs):
-        # # Default the context maker.
-        kwargs.setdefault('make_context', _make_context)
+        # Default the context maker.
         kwargs.setdefault('banner')
+
+        # The initial context passed in, TODO: not this.
+        self.base_context = kwargs.get("context")
+
+        if "context" in kwargs:
+            del kwargs["context"]
 
         # Continue initialization.
         super(Shell, self).__init__(*args, **kwargs)
+
+        self.make_context = _make_context
 
     def get_options(self):
         options = super(Shell, self).get_options()
@@ -67,6 +82,12 @@ class Shell(script.Shell):
         options += script.Option('--pipe', action="store_true"),
 
         return options
+
+    def get_context(self, context=None):
+        if not self.base_context:
+            return self.make_context()
+
+        return self.make_context(context=self.base_context)
 
     def run(self, pipe, *args, **kwargs):
         if pipe:
