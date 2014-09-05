@@ -30,7 +30,7 @@ class Load(Command):
 
     option_list = [Option(dest='filename')]
 
-    def __call__(self, filename):
+    def run(self, filename):
         # Resolve the absoulte path.
         path = os.path.abspath(filename)
 
