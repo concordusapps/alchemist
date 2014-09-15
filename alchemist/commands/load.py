@@ -63,7 +63,10 @@ class Load(Command):
             raise
 
         # Get sizes for logging.
-        max_count = len(str(max(models.values())))
+        if models:
+            max_count = len(str(max(models.values())))
+        else:
+            max_count = 0
 
         # Let the user know.
         for name, count in models.items():
