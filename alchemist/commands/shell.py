@@ -113,4 +113,4 @@ class Shell(script.Shell):
             pass
 
         # Fallback to normal cycle.
-        super(Shell, self).run(*args, **kwargs)
+        super(Shell, self).run(no_ipython=no_ipython, no_bpython=no_bpython)
